@@ -3,697 +3,495 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CCcam Server Checker</title>
+    <title>Testeur de Serveur CCcam Réel</title>
+    
     <style>
-        :root {
-            --bg: #f5f5f5;
-            --card-bg: #ffffff;
-            --text: #333333;
-            --text-light: #666666;
-            --border: #dddddd;
-            --primary: #007bff;
-            --success: #28a745;
-            --error: #dc3545;
-            --warning: #ffc107;
-        }
-
-        .dark {
-            --bg: #1a1a1a;
-            --card-bg: #2d2d2d;
-            --text: #ffffff;
-            --text-light: #aaaaaa;
-            --border: #444444;
-            --primary: #0d6efd;
-            --success: #28a745;
-            --error: #dc3545;
-            --warning: #ffc107;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
             font-family: Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            padding: 20px;
+            background-color: #f4f4f9;
+            color: #333;
             line-height: 1.6;
+            margin: 0;
+            padding: 0;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 10px;
-            color: var(--primary);
-        }
-
-        .subtitle {
-            text-align: center;
-            color: var(--text-light);
-            margin-bottom: 30px;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .card-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: var(--primary);
-        }
-
-        textarea {
-            width: 100%;
-            min-height: 150px;
-            padding: 10px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            background: var(--bg);
-            color: var(--text);
-            font-family: monospace;
-            font-size: 14px;
-            resize: vertical;
-        }
-
-        textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        .btn {
-            background: var(--primary);
+        header {
+            background-color: #4CAF50;
             color: white;
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        main {
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #4CAF50;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        button, #status-filter {
+            background-color: #5cb85c;
+            color: white;
+            padding: 10px 15px;
             border: none;
-            padding: 10px 20px;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 14px;
+            margin-right: 10px;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #4cae4c;
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background-color: #ddd;
+            margin: 30px 0;
+        }
+
+        /* Section de Saisie du Serveur */
+        #single-server-line {
+            width: 98%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-family: monospace;
+        }
+
+        .status-message {
+            padding: 10px;
+            border-radius: 4px;
             margin-top: 10px;
         }
 
-        .btn:hover {
-            opacity: 0.9;
+        .note {
+            font-style: italic;
+            color: #555;
+            font-size: 0.9em;
         }
 
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-        }
-
-        .btn-danger {
-            background: var(--error);
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .stat-card {
-            background: var(--bg);
-            padding: 15px;
-            border-radius: 4px;
-            border-left: 4px solid var(--primary);
-        }
-
-        .stat-card.online { border-left-color: var(--success); }
-        .stat-card.offline { border-left-color: var(--error); }
-        .stat-card.testing { border-left-color: var(--warning); }
-
-        .stat-value {
-            font-size: 2rem;
-            font-weight: bold;
-        }
-
-        .stat-label {
-            color: var(--text-light);
-            font-size: 0.9rem;
-        }
-
-        .filters {
+        /* Tableau et Filtres */
+        #filter-stats {
             display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
-        }
-
-        .filter-btn {
-            padding: 8px 16px;
-            border: 1px solid var(--border);
-            background: var(--card-bg);
-            color: var(--text);
+            padding: 10px;
+            background-color: #f9f9f9;
             border-radius: 4px;
-            cursor: pointer;
         }
 
-        .filter-btn.active {
-            background: var(--primary);
-            border-color: var(--primary);
-            color: white;
-        }
-
-        table {
+        #clines-table {
             width: 100%;
             border-collapse: collapse;
+            margin-top: 20px;
         }
 
-        th, td {
+        #clines-table th, #clines-table td {
+            border: 1px solid #ddd;
             padding: 12px;
             text-align: left;
-            border-bottom: 1px solid var(--border);
         }
 
-        th {
-            background: var(--bg);
+        #clines-table th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        /* Statuts */
+        .online-status {
+            color: #28a745; /* Vert */
             font-weight: bold;
         }
 
-        tr:hover {
-            background: var(--bg);
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 0.85rem;
+        .offline-status {
+            color: #dc3545; /* Rouge */
             font-weight: bold;
         }
 
-        .status-online {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-offline {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .status-testing {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .dark .status-online {
-            background: #1e4620;
-            color: #75ff75;
-        }
-
-        .dark .status-offline {
-            background: #5a1a1a;
-            color: #ff7575;
-        }
-
-        .dark .status-testing {
-            background: #5a4e1a;
-            color: #ffd975;
-        }
-
-        .action-btns {
+        .buttons-container {
             display: flex;
             gap: 10px;
-            margin-bottom: 15px;
+            margin-top: 15px;
             flex-wrap: wrap;
-        }
-
-        .table-container {
-            overflow-x: auto;
-            max-height: 600px;
-            overflow-y: auto;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-light);
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 4px;
-            background: var(--border);
-            border-radius: 2px;
-            margin-top: 10px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: var(--primary);
-            transition: width 0.3s;
-        }
-
-        @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-
-            .card {
-                padding: 15px;
-            }
-
-            th, td {
-                padding: 8px;
-                font-size: 0.9rem;
-            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>CCcam Server Checker</h1>
-            <p class="subtitle">Vérifiez et gérez vos serveurs CCcam</p>
-        </header>
+    
+    <header>
+        <h1>Testeur de Serveur CCcam</h1>
+    </header>
+    
+    <main>
+        <section id="server-input">
+            <h2>Tester un Serveur Intégré (Test Réel via PHP)</h2>
+            <p>Format : C: hostname port user pass (Ex: C: cccam.ugeen.live 28000 95146 ugeen)</p>
+            <textarea id="single-server-line" rows="2" placeholder="Entrez la ligne de serveur ici..."></textarea>
+            <button id="test-single-server">Tester ce Serveur</button>
+            <div id="single-server-status" class="status-message"></div>
+            <p class="note">✅ Le test de connexion utilise **PHP (back-end)** pour vérifier l'ouverture du port.</p>
+        </section>
 
-        <!-- Manual Input Section -->
-        <div class="card">
-            <h2 class="card-title">Saisie des Serveurs</h2>
-            <textarea id="serverInput" placeholder="Collez vos clines ici (une par ligne)&#10;Format: C: host port username password&#10;&#10;Exemple:&#10;C: cccam.ugeen.live 28000 95146 ugeen&#10;C: server.example.com 12000 user1 pass1"></textarea>
-            <button class="btn" onclick="parseManualInput()">Analyser</button>
-        </div>
+        <hr>
 
-        <!-- Stats Section -->
-        <div class="card" id="statsCard" style="display: none;">
-            <h2 class="card-title">Statistiques</h2>
-            <div class="stats">
-                <div class="stat-card">
-                    <div class="stat-value" id="totalCount">0</div>
-                    <div class="stat-label">Total</div>
-                </div>
-                <div class="stat-card online">
-                    <div class="stat-value" id="onlineCount" style="color: var(--success);">0</div>
-                    <div class="stat-label">En Ligne</div>
-                </div>
-                <div class="stat-card offline">
-                    <div class="stat-value" id="offlineCount" style="color: var(--error);">0</div>
-                    <div class="stat-label">Hors Ligne</div>
-                </div>
-                <div class="stat-card testing">
-                    <div class="stat-value" id="testingCount" style="color: var(--warning);">0</div>
-                    <div class="stat-label">En Test</div>
-                </div>
+        <section id="bulk-operations">
+            <h2>Gestion des Clines (Fichier)</h2>
+            <div class="buttons-container">
+                <input type="file" id="file-upload" accept=".txt,.cfg" style="display: none;">
+                <button onclick="document.getElementById('file-upload').click()">Importer un Fichier (.txt/.cfg)</button>
+                <button id="save-local-button">💾 Sauvegarder Localement</button>
+                <button id="download-text-button">📥 Télécharger les Clines (Format Texte)</button>
             </div>
-        </div>
+            <div id="file-info"></div>
+        </section>
 
-        <!-- Filters Section -->
-        <div class="card" id="filtersCard" style="display: none;">
-            <h2 class="card-title">Filtres</h2>
-            <div class="filters">
-                <button class="filter-btn active" onclick="filterServers('all')">Tous</button>
-                <button class="filter-btn" onclick="filterServers('online')">En Ligne</button>
-                <button class="filter-btn" onclick="filterServers('offline')">Hors Ligne</button>
-                <button class="filter-btn" onclick="filterServers('testing')">En Test</button>
+        <hr>
+
+        <section id="data-display">
+            <h2>Statut des Clines (Statuts du Fichier sont Simulés)</h2>
+            <div id="filter-stats">
+                <p>Total Clines: <span id="count-total">0</span> | En Ligne: <span id="count-online" class="online-status">0</span> | Hors Ligne: <span id="count-offline" class="offline-status">0</span></p>
+                <label for="status-filter">Filtrer par statut:</label>
+                <select id="status-filter">
+                    <option value="all">Tout</option>
+                    <option value="online">En Ligne</option>
+                    <option value="offline">Hors Ligne</option>
+                </select>
             </div>
-        </div>
-
-        <!-- Servers Table -->
-        <div class="card" id="serversCard" style="display: none;">
-            <h2 class="card-title">Liste des Serveurs</h2>
-
-            <div class="action-btns">
-                <button class="btn" onclick="testAllServers()">Tester Tous</button>
-                <button class="btn btn-secondary" onclick="exportResults()">Exporter</button>
-                <button class="btn btn-danger" onclick="clearServers()">Effacer Tout</button>
-            </div>
-
-            <div id="testProgress" style="display: none;">
-                <p style="color: var(--text-light);">Test en cours...</p>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Hôte</th>
-                            <th>Port</th>
-                            <th>Utilisateur</th>
-                            <th>Mot de passe</th>
-                            <th>Statut</th>
-                            <th>Temps</th>
-                        </tr>
-                    </thead>
-                    <tbody id="serversTableBody">
+            <table id="clines-table">
+                <thead>
+                    <tr>
+                        <th>Hôte</th>
+                        <th>Port</th>
+                        <th>Utilisateur</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
                     </tbody>
-                </table>
-            </div>
+            </table>
+        </section>
+    </main>
 
-            <div id="emptyState" class="empty-state">
-                <p>Aucun serveur à afficher</p>
-            </div>
-        </div>
-    </div>
+    <footer>
+        <p>&copy; 2025 Testeur CCcam | Nécessite PHP</p>
+    </footer>
+
+    <?php
+    /**
+     * Cette fonction PHP tente d'établir une connexion TCP/IP sur le port spécifié
+     * pour vérifier si le serveur est en ligne et accessible.
+     * @param string $host L'adresse IP ou le nom d'hôte du serveur.
+     * @param int $port Le port du serveur CCcam.
+     * @param int $timeout Le délai maximum en secondes.
+     * @return bool Vrai si la connexion est établie, faux sinon.
+     */
+    function check_cccam_status($host, $port, $timeout = 2) {
+        // Supprime les crochets d'IPv6 si présents (pour la compatibilité)
+        $host = trim($host, '[]'); 
+        
+        // Supprime les préfixes de protocole ou les espaces superflus
+        $host = preg_replace('/^(\w+:\/\/)/', '', $host); 
+        
+        // Tente d'ouvrir une socket
+        $fp = @fsockopen($host, $port, $errno, $errstr, $timeout);
+        
+        if ($fp) {
+            fclose($fp);
+            return true; // Connexion réussie
+        }
+        return false; // Échec de la connexion
+    }
+
+    // Gère la requête AJAX envoyée par le JavaScript
+    if (isset($_POST['action']) && $_POST['action'] === 'test_server' && isset($_POST['host']) && isset($_POST['port'])) {
+        // Nettoyage et validation des données d'entrée
+        $host = filter_var($_POST['host'], FILTER_SANITIZE_STRING);
+        $port = filter_var($_POST['port'], FILTER_SANITIZE_NUMBER_INT);
+        
+        if (empty($host) || empty($port)) {
+            header('Content-Type: application/json');
+            echo json_encode(['status' => 'error', 'message' => 'Hôte ou Port manquant.']);
+            exit;
+        }
+        
+        // Exécution du test réel
+        $is_online = check_cccam_status($host, (int)$port);
+        
+        header('Content-Type: application/json');
+        if ($is_online) {
+            echo json_encode(['status' => 'online', 'message' => "✅ Serveur $host:$port est en LIGNE."]);
+        } else {
+            echo json_encode(['status' => 'offline', 'message' => "❌ Serveur $host:$port est HORS LIGNE ou inaccessible."]);
+        }
+        exit;
+    }
+    // Si la requête n'est pas une requête AJAX de test, le code PHP se termine ici
+    // et le HTML est affiché normalement.
+    ?>
 
     <script>
-        // Dark/Light mode detection
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.documentElement.classList.add('dark');
-        }
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-            if (event.matches) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
+        document.addEventListener('DOMContentLoaded', () => {
+            const fileUpload = document.getElementById('file-upload');
+            const tableBody = document.querySelector('#clines-table tbody');
+            const statusFilter = document.getElementById('status-filter');
+            const saveLocalButton = document.getElementById('save-local-button');
+            const downloadTextButton = document.getElementById('download-text-button');
+            const singleServerLine = document.getElementById('single-server-line');
+            const testSingleServerButton = document.getElementById('test-single-server');
+            const singleServerStatusDiv = document.getElementById('single-server-status');
+
+            let clinesData = [];
+
+            // --- Fonctions d'Utilité ---
+
+            /**
+             * @brief Analyse une ligne CCcam de manière robuste.
+             */
+            function parseCline(line) {
+                // Supprime les espaces inutiles, assure que la ligne commence par 'C:', et remplace les espaces ou tirets multiples par un seul espace.
+                const cleanedLine = line.trim().toUpperCase()
+                    .replace(/^-+/, '') 
+                    .replace(/\s+/g, ' ');
+
+                if (!cleanedLine.startsWith('C:')) {
+                    return null;
+                }
+
+                const parts = cleanedLine.substring(2).trim().split(' ');
+
+                if (parts.length < 4) {
+                    return null;
+                }
+
+                const [host, port, user, pass] = parts.slice(0, 4);
+
+                if (isNaN(parseInt(port)) || parseInt(port) <= 0) {
+                    return null;
+                }
+
+                // STATUT SIMULÉ pour le tableau de masse (la vérification de masse nécessiterait
+                // une requête PHP pour chaque ligne, ce qui est très lent).
+                const status = Math.random() < 0.7 ? 'online' : 'offline';
+
+                return { host, port, user, pass, status };
             }
+            
+            /**
+             * @brief Effectue la requête de test réelle vers le script PHP.
+             */
+            async function testServerViaPHP(host, port) {
+                const formData = new FormData();
+                formData.append('action', 'test_server');
+                formData.append('host', host);
+                formData.append('port', port);
+                
+                try {
+                    const response = await fetch('index.php', { // Requête vers le même fichier
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    return result; // Contient {status: 'online'/'offline'/'error', message: '...'}
+                } catch (error) {
+                    console.error("Erreur de communication avec le serveur PHP:", error);
+                    return { status: 'error', message: `Erreur de communication: ${error.message}` };
+                }
+            }
+
+
+            /**
+             * @brief Affiche les données des clines dans le tableau et met à jour les compteurs.
+             */
+            function renderTable(filter) {
+                tableBody.innerHTML = '';
+                let onlineCount = 0;
+                let offlineCount = 0;
+
+                clinesData.forEach(cline => {
+                    if (cline.status === 'online') onlineCount++;
+                    else if (cline.status === 'offline') offlineCount++;
+                });
+
+                const filteredClines = clinesData.filter(cline => {
+                    return filter === 'all' || cline.status === filter;
+                });
+
+                document.getElementById('count-total').textContent = clinesData.length;
+                document.getElementById('count-online').textContent = onlineCount;
+                document.getElementById('count-offline').textContent = offlineCount;
+
+                // Affichage des messages si le tableau est vide
+                if (clinesData.length === 0) {
+                    const row = tableBody.insertRow();
+                    row.innerHTML = `<td colspan="4" style="text-align: center;">Aucune cline chargée.</td>`;
+                    return;
+                }
+                if (filteredClines.length === 0) {
+                    const row = tableBody.insertRow();
+                    row.innerHTML = `<td colspan="4" style="text-align: center;">Aucune cline correspondant au filtre "${filter.toUpperCase()}" n'a été trouvée.</td>`;
+                    return;
+                }
+
+
+                filteredClines.forEach(cline => {
+                    const row = tableBody.insertRow();
+                    const statusClass = cline.status === 'online' ? 'online-status' : 'offline-status';
+                    const statusText = cline.status === 'online' ? '✅ EN LIGNE' : '❌ HORS LIGNE';
+
+                    row.innerHTML = `
+                        <td>${cline.host}</td>
+                        <td>${cline.port}</td>
+                        <td>${cline.user}</td>
+                        <td class="${statusClass}">${statusText}</td>
+                    `;
+                });
+            }
+
+            /**
+             * @brief Charge les données sauvegardées localement (LocalStorage).
+             */
+            function loadLocalData() {
+                const savedData = localStorage.getItem('cccamClines');
+                if (savedData) {
+                    try {
+                        clinesData = JSON.parse(savedData);
+                        renderTable(statusFilter.value);
+                    } catch (e) {
+                        console.error("Erreur de chargement des données locales:", e);
+                    }
+                } else {
+                    renderTable('all'); 
+                }
+            }
+
+            // --- GESTIONNAIRES D'ÉVÉNEMENTS ---
+
+            // 1. Importation de fichier
+            fileUpload.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const content = e.target.result;
+                    const lines = content.split('\n');
+                    let validClines = [];
+                    let invalidCount = 0;
+
+                    lines.forEach(line => {
+                        const cline = parseCline(line);
+                        if (cline) {
+                            validClines.push(cline);
+                        } else if (line.trim().length > 0 && !line.trim().startsWith('#')) {
+                            invalidCount++;
+                        }
+                    });
+
+                    clinesData = validClines;
+                    renderTable(statusFilter.value);
+                    document.getElementById('file-info').textContent = `Fichier chargé. ${validClines.length} clines valides trouvées (Statuts Simulés). ${invalidCount} lignes ignorées.`;
+                    event.target.value = '';
+                };
+                reader.readAsText(file);
+            });
+
+            // 2. Filtrage du tableau
+            statusFilter.addEventListener('change', (event) => {
+                renderTable(event.target.value);
+            });
+
+            // 3. Sauvegarde locale
+            saveLocalButton.addEventListener('click', () => {
+                if (clinesData.length > 0) {
+                    localStorage.setItem('cccamClines', JSON.stringify(clinesData));
+                    alert('Données sauvegardées localement dans votre navigateur !');
+                } else {
+                    alert('Rien à sauvegarder. Importez des clines d\'abord.');
+                }
+            });
+
+            // 4. Téléchargement en format Texte
+            downloadTextButton.addEventListener('click', () => {
+                if (clinesData.length === 0) {
+                    alert("Aucune donnée à télécharger.");
+                    return;
+                }
+                
+                const fileContent = clinesData
+                    .map(cline => `C: ${cline.host} ${cline.port} ${cline.user} ${cline.pass}`)
+                    .join('\n');
+
+                const blob = new Blob([fileContent], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'clines_export.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+
+            // 5. Test de serveur unique (Réel via PHP)
+            testSingleServerButton.addEventListener('click', async () => {
+                const line = singleServerLine.value.trim();
+                if (!line) {
+                    singleServerStatusDiv.className = 'status-message offline-status';
+                    singleServerStatusDiv.textContent = 'Veuillez entrer une ligne de serveur.';
+                    return;
+                }
+
+                const cline = parseCline(line);
+
+                if (!cline) {
+                    singleServerStatusDiv.className = 'status-message offline-status';
+                    singleServerStatusDiv.textContent = '❌ Ligne de serveur invalide. Format attendu : "C: host port user pass".';
+                    return;
+                }
+
+                // Affichage du chargement
+                testSingleServerButton.disabled = true;
+                singleServerStatusDiv.className = 'status-message';
+                singleServerStatusDiv.textContent = `⏳ Test en cours de ${cline.host}:${cline.port} via PHP...`;
+
+                // Appel de la fonction asynchrone pour le test réel
+                const result = await testServerViaPHP(cline.host, cline.port);
+
+                // Affichage du résultat
+                if (result.status === 'online') {
+                    singleServerStatusDiv.className = 'status-message online-status';
+                    singleServerStatusDiv.innerHTML = `✅ **EN LIGNE** : ${result.message}`;
+                } else if (result.status === 'offline') {
+                    singleServerStatusDiv.className = 'status-message offline-status';
+                    singleServerStatusDiv.innerHTML = `❌ **HORS LIGNE** : ${result.message}`;
+                } else {
+                    singleServerStatusDiv.className = 'status-message offline-status';
+                    singleServerStatusDiv.innerHTML = `⚠️ **ERREUR** : ${result.message}`;
+                }
+                
+                testSingleServerButton.disabled = false;
+            });
+
+            // Initialisation
+            loadLocalData();
         });
-
-        let servers = [];
-        let currentFilter = 'all';
-
-        function parseClines(text) {
-            const lines = text.split('\n');
-            let parsed = 0;
-
-            lines.forEach(line => {
-                // Flexible regex to parse clines with various formats
-                // Matches: C: host port username password
-                // Also handles extra spaces, tabs, dashes, etc.
-                const clineRegex = /C\s*:\s*([a-zA-Z0-9\.\-_]+)\s+(\d+)\s+([a-zA-Z0-9\.\-_]+)\s+([a-zA-Z0-9\.\-_]+)/i;
-                const match = line.match(clineRegex);
-
-                if (match) {
-                    const server = {
-                        id: servers.length + 1,
-                        host: match[1].trim(),
-                        port: match[2].trim(),
-                        username: match[3].trim(),
-                        password: match[4].trim(),
-                        status: 'testing',
-                        responseTime: '-'
-                    };
-                    servers.push(server);
-                    parsed++;
-                }
-            });
-
-            if (parsed > 0) {
-                showNotification(`${parsed} serveur(s) ajouté(s) avec succès`, 'success');
-                updateDisplay();
-                testAllServers();
-            } else {
-                showNotification('Aucun serveur valide trouvé', 'error');
-            }
-        }
-
-        function parseManualInput() {
-            const input = document.getElementById('serverInput').value;
-            if (!input.trim()) {
-                showNotification('Veuillez entrer au moins une cline', 'error');
-                return;
-            }
-
-            parseClines(input);
-        }
-
-        function updateDisplay() {
-            if (servers.length === 0) {
-                document.getElementById('statsCard').style.display = 'none';
-                document.getElementById('filtersCard').style.display = 'none';
-                document.getElementById('serversCard').style.display = 'none';
-                return;
-            }
-
-            document.getElementById('statsCard').style.display = 'block';
-            document.getElementById('filtersCard').style.display = 'block';
-            document.getElementById('serversCard').style.display = 'block';
-
-            updateStats();
-            renderServers();
-        }
-
-        function updateStats() {
-            const total = servers.length;
-            const online = servers.filter(s => s.status === 'online').length;
-            const offline = servers.filter(s => s.status === 'offline').length;
-            const testing = servers.filter(s => s.status === 'testing').length;
-
-            document.getElementById('totalCount').textContent = total;
-            document.getElementById('onlineCount').textContent = online;
-            document.getElementById('offlineCount').textContent = offline;
-            document.getElementById('testingCount').textContent = testing;
-        }
-
-        function renderServers() {
-            const tbody = document.getElementById('serversTableBody');
-            const emptyState = document.getElementById('emptyState');
-
-            let filteredServers = servers;
-            if (currentFilter !== 'all') {
-                filteredServers = servers.filter(s => s.status === currentFilter);
-            }
-
-            if (filteredServers.length === 0) {
-                tbody.innerHTML = '';
-                emptyState.style.display = 'block';
-                return;
-            }
-
-            emptyState.style.display = 'none';
-
-            tbody.innerHTML = filteredServers.map(server => `
-                <tr>
-                    <td>${server.id}</td>
-                    <td>${server.host}</td>
-                    <td>${server.port}</td>
-                    <td>${server.username}</td>
-                    <td>${server.password}</td>
-                    <td>
-                        <span class="status-badge status-${server.status}">
-                            ${server.status === 'online' ? '✅ En ligne' :
-                              server.status === 'offline' ? '❌ Hors ligne' :
-                              '🔄 Test en cours'}
-                        </span>
-                    </td>
-                    <td>${server.responseTime}</td>
-                </tr>
-            `).join('');
-        }
-
-        function filterServers(filter) {
-            currentFilter = filter;
-
-            // Update filter buttons
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-
-            renderServers();
-        }
-
-        async function testAllServers() {
-            if (servers.length === 0) return;
-
-            document.getElementById('testProgress').style.display = 'block';
-
-            for (let i = 0; i < servers.length; i++) {
-                await testServer(i);
-
-                // Update progress
-                const progress = ((i + 1) / servers.length) * 100;
-                document.getElementById('progressFill').style.width = progress + '%';
-
-                updateStats();
-                renderServers();
-            }
-
-            document.getElementById('testProgress').style.display = 'none';
-            showNotification('Test de tous les serveurs terminé', 'success');
-        }
-
-        async function testServer(index) {
-            // Simulation of server testing
-            // In a real scenario, you'd need a backend service to test CCcam servers
-            // as browsers can't make direct TCP connections
-
-            servers[index].status = 'testing';
-            renderServers();
-
-            return new Promise(resolve => {
-                setTimeout(() => {
-                    // Simulate random results for demonstration
-                    // In production, replace with actual server testing logic
-                    const isOnline = Math.random() > 0.3; // 70% chance online
-
-                    servers[index].status = isOnline ? 'online' : 'offline';
-                    servers[index].responseTime = isOnline ?
-                        `${Math.floor(Math.random() * 500) + 50}ms` :
-                        'Timeout';
-
-                    resolve();
-                }, Math.random() * 1000 + 500); // Random delay between 500-1500ms
-            });
-        }
-
-        function clearServers() {
-            showConfirmDialog('Êtes-vous sûr de vouloir effacer tous les serveurs ?', () => {
-                servers = [];
-                updateDisplay();
-                showNotification('Tous les serveurs ont été effacés', 'success');
-            });
-        }
-
-        function exportResults() {
-            if (servers.length === 0) {
-                showNotification('Aucun serveur à exporter', 'error');
-                return;
-            }
-
-            // Create CSV content
-            let csv = 'Hôte,Port,Utilisateur,Mot de passe,Statut,Temps de réponse\n';
-            servers.forEach(server => {
-                csv += `${server.host},${server.port},${server.username},${server.password},${server.status},${server.responseTime}\n`;
-            });
-
-            // Download CSV
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `cccam_servers_${new Date().toISOString().slice(0,10)}.csv`;
-            a.click();
-            window.URL.revokeObjectURL(url);
-
-            showNotification('Résultats exportés avec succès', 'success');
-        }
-
-        function showNotification(message, type) {
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: ${type === 'success' ? 'var(--success)' : 'var(--error)'};
-                color: white;
-                padding: 1rem 2rem;
-                border-radius: 8px;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-                z-index: 1000;
-                animation: slideIn 0.3s ease;
-                font-family: 'Outfit', sans-serif;
-                font-weight: 600;
-            `;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-
-            setTimeout(() => {
-                notification.style.animation = 'slideOut 0.3s ease';
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
-        }
-
-        function showConfirmDialog(message, onConfirm) {
-            const modal = document.createElement('div');
-            modal.style.cssText = `
-                position: fixed;
-                inset: 0;
-                background: rgba(0, 0, 0, 0.7);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 2000;
-                animation: fadeIn 0.3s ease;
-            `;
-
-            modal.innerHTML = `
-                <div style="
-                    background: var(--bg-card);
-                    padding: 2rem;
-                    border-radius: 16px;
-                    max-width: 400px;
-                    width: 90%;
-                    box-shadow: 0 16px 64px rgba(0,0,0,0.5);
-                    border: 1px solid var(--border);
-                ">
-                    <p style="color: var(--text-primary); margin-bottom: 2rem; font-size: 1.1rem;">${message}</p>
-                    <div style="display: flex; justify-content: flex-end; gap: 1rem;">
-                        <button id="cancelBtn" style="
-                            padding: 0.8rem 1.5rem;
-                            background: var(--bg-secondary);
-                            color: var(--text-primary);
-                            border: 2px solid var(--border);
-                            border-radius: 8px;
-                            cursor: pointer;
-                            font-weight: 600;
-                        ">Annuler</button>
-                        <button id="confirmBtn" style="
-                            padding: 0.8rem 1.5rem;
-                            background: var(--error);
-                            color: white;
-                            border: none;
-                            border-radius: 8px;
-                            cursor: pointer;
-                            font-weight: 600;
-                        ">Confirmer</button>
-                    </div>
-                </div>
-            `;
-
-            document.body.appendChild(modal);
-
-            modal.querySelector('#cancelBtn').addEventListener('click', () => {
-                modal.remove();
-            });
-
-            modal.querySelector('#confirmBtn').addEventListener('click', () => {
-                modal.remove();
-                onConfirm();
-            });
-        }
-
-        // Add CSS animations
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideIn {
-                from {
-                    transform: translateX(400px);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-            }
-            @keyframes slideOut {
-                from {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-                to {
-                    transform: translateX(400px);
-                    opacity: 0;
-                }
-            }
-            @keyframes fadeIn {
-                from { opacity: 0; }
-                to { opacity: 1; }
-            }
-        `;
-        document.head.appendChild(style);
     </script>
 </body>
 </html>
