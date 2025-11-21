@@ -1,605 +1,699 @@
-4     <meta charset="UTF-8">
-    5     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    6     <title>CCcam Server Checker</title>
--   7     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
--   8     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
-    7     <style>
-    8         :root {
--  11             --bg-primary: #0a0e27;
--  12             --bg-secondary: #141936;
--  13             --bg-card: #1a1f3a;
--  14             --accent-primary: #00d9ff;
--  15             --accent-secondary: #7b2cbf;
--  16             --text-primary: #e0e6ff;
--  17             --text-secondary: #8b92b8;
--  18             --success: #00ff88;
--  19             --error: #ff4757;
--  20             --warning: #ffa502;
--  21             --border: rgba(0, 217, 255, 0.2);
--  22         }
--  23 
--  24         .light {
--  25             --bg-primary: #f4f7fc;
--  26             --bg-secondary: #ffffff;
--  27             --bg-card: #ffffff;
--  28             --accent-primary: #0066cc;
--  29             --accent-secondary: #6a1b9a;
--  30             --text-primary: #1a1f3a;
--  31             --text-secondary: #5f6368;
--  32             --success: #00a85a;
--  33             --error: #d93025;
--  34             --warning: #f57c00;
--  35             --border: rgba(0, 102, 204, 0.3);
-+   9             --bg: #f5f5f5;
-+  10             --card-bg: #ffffff;
-+  11             --text: #333333;
-+  12             --text-light: #666666;
-+  13             --border: #dddddd;
-+  14             --primary: #007bff;
-+  15             --success: #28a745;
-+  16             --error: #dc3545;
-+  17             --warning: #ffc107;
-+  18         }
-+  19 
-+  20         .dark {
-+  21             --bg: #1a1a1a;
-+  22             --card-bg: #2d2d2d;
-+  23             --text: #ffffff;
-+  24             --text-light: #aaaaaa;
-+  25             --border: #444444;
-+  26             --primary: #0d6efd;
-+  27             --success: #28a745;
-+  28             --error: #dc3545;
-+  29             --warning: #ffc107;
-   30         }
-   31 
-   32         * {
-   36         }
-   37 
-   38         body {
--  45             font-family: 'Outfit', sans-serif;
--  46             background: var(--bg-primary);
--  47             color: var(--text-primary);
--  48             min-height: 100vh;
--  49             transition: background 0.3s ease, color 0.3s ease;
-+  39             font-family: Arial, sans-serif;
-+  40             background: var(--bg);
-+  41             color: var(--text);
-+  42             padding: 20px;
-+  43             line-height: 1.6;
-   44         }
-   45 
-   46         .container {
--  53             max-width: 1400px;
-+  47             max-width: 1200px;
-   48             margin: 0 auto;
--  55             padding: 2rem;
--  56         }
--  57 
--  58         header {
-+  49         }
-+  50 
-+  51         h1 {
-   52             text-align: center;
--  60             margin-bottom: 3rem;
--  61             animation: slideDown 0.6s ease;
--  62         }
--  63 
--  64         @keyframes slideDown {
--  65             from {
--  66                 opacity: 0;
--  67                 transform: translateY(-30px);
--  68             }
--  69             to {
--  70                 opacity: 1;
--  71                 transform: translateY(0);
--  72             }
--  73         }
--  74 
--  75         h1 {
--  76             font-family: 'JetBrains Mono', monospace;
--  77             font-size: 2.5rem;
--  78             font-weight: 700;
--  79             background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
--  80             -webkit-background-clip: text;
--  81             -webkit-text-fill-color: transparent;
--  82             background-clip: text;
--  83             margin-bottom: 0.5rem;
-+  53             margin-bottom: 10px;
-+  54             color: var(--primary);
-   55         }
-   56 
-   57         .subtitle {
--  87             color: var(--text-secondary);
--  88             font-size: 1rem;
--  89             font-weight: 300;
-+  58             text-align: center;
-+  59             color: var(--text-light);
-+  60             margin-bottom: 30px;
-   61         }
-   62 
-   63         .card {
--  93             background: var(--bg-card);
-+  64             background: var(--card-bg);
-   65             border: 1px solid var(--border);
--  95             border-radius: 16px;
--  96             padding: 2rem;
--  97             margin-bottom: 2rem;
--  98             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
--  99             animation: fadeInUp 0.6s ease;
-- 100             animation-fill-mode: both;
-- 101         }
-- 102 
-- 103         @keyframes fadeInUp {
-- 104             from {
-- 105                 opacity: 0;
-- 106                 transform: translateY(20px);
-- 107             }
-- 108             to {
-- 109                 opacity: 1;
-- 110                 transform: translateY(0);
-- 111             }
-- 112         }
-- 113 
-- 114         .card:nth-child(2) { animation-delay: 0.1s; }
-- 115         .card:nth-child(3) { animation-delay: 0.2s; }
-- 116         .card:nth-child(4) { animation-delay: 0.3s; }
-+  66             border-radius: 8px;
-+  67             padding: 20px;
-+  68             margin-bottom: 20px;
-+  69         }
-   70 
-   71         .card-title {
-- 119             font-size: 1.3rem;
-- 120             font-weight: 600;
-- 121             margin-bottom: 1.5rem;
-- 122             color: var(--accent-primary);
-- 123             font-family: 'JetBrains Mono', monospace;
-- 124         }
-- 125 
-- 126         .upload-zone {
-- 127             border: 2px dashed var(--border);
-- 128             border-radius: 12px;
-- 129             padding: 3rem 2rem;
-- 130             text-align: center;
-- 131             cursor: pointer;
-- 132             transition: all 0.3s ease;
-- 133             background: linear-gradient(135deg, rgba(0, 217, 255, 0.05), rgba(123, 44, 191, 0.05));
-- 134         }
-- 135 
-- 136         .upload-zone:hover, .upload-zone.dragover {
-- 137             border-color: var(--accent-primary);
-- 138             background: linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(123, 44, 191, 0.1));
-- 139             transform: scale(1.02);
-- 140         }
-- 141 
-- 142         .upload-icon {
-- 143             font-size: 3rem;
-- 144             margin-bottom: 1rem;
-- 145         }
-- 146 
-- 147         input[type="file"] {
-- 148             display: none;
-+  72             font-size: 1.2rem;
-+  73             font-weight: bold;
-+  74             margin-bottom: 15px;
-+  75             color: var(--primary);
-+  76         }
-+  77 
-+  78         textarea {
-+  79             width: 100%;
-+  80             min-height: 150px;
-+  81             padding: 10px;
-+  82             border: 1px solid var(--border);
-+  83             border-radius: 4px;
-+  84             background: var(--bg);
-+  85             color: var(--text);
-+  86             font-family: monospace;
-+  87             font-size: 14px;
-+  88             resize: vertical;
-+  89         }
-+  90 
-+  91         textarea:focus {
-+  92             outline: none;
-+  93             border-color: var(--primary);
-   94         }
-   95 
-   96         .btn {
-- 152             background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-+  97             background: var(--primary);
-   98             color: white;
-   99             border: none;
-- 155             padding: 0.8rem 2rem;
-- 156             border-radius: 8px;
-- 157             font-size: 1rem;
-- 158             font-weight: 600;
-+ 100             padding: 10px 20px;
-+ 101             border-radius: 4px;
-  102             cursor: pointer;
-- 160             transition: all 0.3s ease;
-- 161             font-family: 'JetBrains Mono', monospace;
-- 162             text-transform: uppercase;
-- 163             letter-spacing: 1px;
-+ 103             font-size: 14px;
-+ 104             margin-top: 10px;
-  105         }
-  106 
-  107         .btn:hover {
-- 167             transform: translateY(-2px);
-- 168             box-shadow: 0 8px 24px rgba(0, 217, 255, 0.4);
-+ 108             opacity: 0.9;
-  109         }
-  110 
-  111         .btn:disabled {
-  112             opacity: 0.5;
-  113             cursor: not-allowed;
-- 174             transform: none;
-- 175         }
-- 176 
-- 177         textarea {
-- 178             width: 100%;
-- 179             min-height: 150px;
-- 180             padding: 1rem;
-- 181             border: 1px solid var(--border);
-- 182             border-radius: 8px;
-- 183             background: var(--bg-secondary);
-- 184             color: var(--text-primary);
-- 185             font-family: 'JetBrains Mono', monospace;
-- 186             font-size: 0.9rem;
-- 187             resize: vertical;
-- 188             transition: all 0.3s ease;
-- 189         }
-- 190 
-- 191         textarea:focus {
-- 192             outline: none;
-- 193             border-color: var(--accent-primary);
-- 194             box-shadow: 0 0 0 3px rgba(0, 217, 255, 0.1);
-- 195         }
-- 196 
-- 197         .filters {
-- 198             display: flex;
-- 199             gap: 1rem;
-- 200             flex-wrap: wrap;
-- 201             margin-bottom: 2rem;
-- 202         }
-- 203 
-- 204         .filter-btn {
-- 205             padding: 0.6rem 1.5rem;
-- 206             border: 2px solid var(--border);
-- 207             background: transparent;
-- 208             color: var(--text-primary);
-- 209             border-radius: 8px;
-- 210             cursor: pointer;
-- 211             font-weight: 500;
-- 212             transition: all 0.3s ease;
-- 213             font-family: 'Outfit', sans-serif;
-- 214         }
-- 215 
-- 216         .filter-btn.active {
-- 217             background: var(--accent-primary);
-- 218             border-color: var(--accent-primary);
-- 219             color: var(--bg-primary);
-- 220         }
-- 221 
-- 222         .filter-btn:hover {
-- 223             border-color: var(--accent-primary);
-- 224             transform: translateY(-2px);
-+ 114         }
-+ 115 
-+ 116         .btn-secondary {
-+ 117             background: #6c757d;
-+ 118         }
-+ 119 
-+ 120         .btn-danger {
-+ 121             background: var(--error);
-  122         }
-  123 
-  124         .stats {
-  125             display: grid;
-- 229             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-- 230             gap: 1rem;
-- 231             margin-bottom: 2rem;
-+ 126             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-+ 127             gap: 15px;
-+ 128             margin-bottom: 20px;
-  129         }
-  130 
-  131         .stat-card {
-- 235             background: var(--bg-secondary);
-- 236             padding: 1.5rem;
-- 237             border-radius: 12px;
-- 238             border-left: 4px solid var(--accent-primary);
-- 239             transition: all 0.3s ease;
-- 240         }
-- 241 
-- 242         .stat-card:hover {
-- 243             transform: translateX(5px);
-+ 132             background: var(--bg);
-+ 133             padding: 15px;
-+ 134             border-radius: 4px;
-+ 135             border-left: 4px solid var(--primary);
-  136         }
-  137 
-  138         .stat-card.online { border-left-color: var(--success); }
-  141 
-  142         .stat-value {
-  143             font-size: 2rem;
-- 252             font-weight: 700;
-- 253             font-family: 'JetBrains Mono', monospace;
-+ 144             font-weight: bold;
-  145         }
-  146 
-  147         .stat-label {
-- 257             color: var(--text-secondary);
-+ 148             color: var(--text-light);
-  149             font-size: 0.9rem;
-- 259             margin-top: 0.5rem;
-- 260         }
-- 261 
-- 262         .servers-table {
-+ 150         }
-+ 151 
-+ 152         .filters {
-+ 153             display: flex;
-+ 154             gap: 10px;
-+ 155             flex-wrap: wrap;
-+ 156             margin-bottom: 20px;
-+ 157         }
-+ 158 
-+ 159         .filter-btn {
-+ 160             padding: 8px 16px;
-+ 161             border: 1px solid var(--border);
-+ 162             background: var(--card-bg);
-+ 163             color: var(--text);
-+ 164             border-radius: 4px;
-+ 165             cursor: pointer;
-+ 166         }
-+ 167 
-+ 168         .filter-btn.active {
-+ 169             background: var(--primary);
-+ 170             border-color: var(--primary);
-+ 171             color: white;
-+ 172         }
-+ 173 
-+ 174         table {
-  175             width: 100%;
-- 264             border-collapse: separate;
-- 265             border-spacing: 0;
-- 266         }
-- 267 
-- 268         .servers-table th {
-- 269             background: var(--bg-secondary);
-- 270             padding: 1rem;
-+ 176             border-collapse: collapse;
-+ 177         }
-+ 178 
-+ 179         th, td {
-+ 180             padding: 12px;
-  181             text-align: left;
-- 272             font-weight: 600;
-- 273             font-family: 'JetBrains Mono', monospace;
-- 274             border-bottom: 2px solid var(--border);
-- 275             position: sticky;
-- 276             top: 0;
-- 277             z-index: 10;
-- 278         }
-- 279 
-- 280         .servers-table td {
-- 281             padding: 1rem;
-  182             border-bottom: 1px solid var(--border);
-- 283             font-family: 'JetBrains Mono', monospace;
-- 284             font-size: 0.85rem;
-- 285         }
-- 286 
-- 287         .servers-table tr {
-- 288             transition: all 0.3s ease;
-- 289         }
-- 290 
-- 291         .servers-table tbody tr:hover {
-- 292             background: var(--bg-secondary);
-- 293             transform: scale(1.01);
-+ 183         }
-+ 184 
-+ 185         th {
-+ 186             background: var(--bg);
-+ 187             font-weight: bold;
-+ 188         }
-+ 189 
-+ 190         tr:hover {
-+ 191             background: var(--bg);
-  192         }
-  193 
-  194         .status-badge {
-  195             display: inline-block;
-- 298             padding: 0.4rem 1rem;
-- 299             border-radius: 20px;
-- 300             font-size: 0.8rem;
-- 301             font-weight: 600;
-- 302             text-transform: uppercase;
-+ 196             padding: 4px 12px;
-+ 197             border-radius: 12px;
-+ 198             font-size: 0.85rem;
-+ 199             font-weight: bold;
-  200         }
-  201 
-  202         .status-online {
-- 306             background: rgba(0, 255, 136, 0.2);
-- 307             color: var(--success);
-- 308             border: 1px solid var(--success);
-+ 203             background: #d4edda;
-+ 204             color: #155724;
-  205         }
-  206 
-  207         .status-offline {
-- 312             background: rgba(255, 71, 87, 0.2);
-- 313             color: var(--error);
-- 314             border: 1px solid var(--error);
-+ 208             background: #f8d7da;
-+ 209             color: #721c24;
-  210         }
-  211 
-  212         .status-testing {
-- 318             background: rgba(255, 165, 2, 0.2);
-- 319             color: var(--warning);
-- 320             border: 1px solid var(--warning);
-- 321         }
-- 322 
-- 323         .loading {
-- 324             text-align: center;
-- 325             padding: 3rem;
-- 326         }
-- 327 
-- 328         .spinner {
-- 329             border: 4px solid var(--border);
-- 330             border-top: 4px solid var(--accent-primary);
-- 331             border-radius: 50%;
-- 332             width: 50px;
-- 333             height: 50px;
-- 334             animation: spin 1s linear infinite;
-- 335             margin: 0 auto;
-- 336         }
-- 337 
-- 338         @keyframes spin {
-- 339             0% { transform: rotate(0deg); }
-- 340             100% { transform: rotate(360deg); }
-+ 213             background: #fff3cd;
-+ 214             color: #856404;
-+ 215         }
-+ 216 
-+ 217         .dark .status-online {
-+ 218             background: #1e4620;
-+ 219             color: #75ff75;
-+ 220         }
-+ 221 
-+ 222         .dark .status-offline {
-+ 223             background: #5a1a1a;
-+ 224             color: #ff7575;
-+ 225         }
-+ 226 
-+ 227         .dark .status-testing {
-+ 228             background: #5a4e1a;
-+ 229             color: #ffd975;
-  230         }
-  231 
-  232         .action-btns {
-  233             display: flex;
-- 345             gap: 1rem;
-- 346             margin-top: 1rem;
-+ 234             gap: 10px;
-+ 235             margin-bottom: 15px;
-  236             flex-wrap: wrap;
-- 348         }
-- 349 
-- 350         .btn-secondary {
-- 351             background: var(--bg-secondary);
-- 352             color: var(--text-primary);
-- 353             border: 2px solid var(--border);
-- 354         }
-- 355 
-- 356         .btn-secondary:hover {
-- 357             border-color: var(--accent-primary);
-- 358             box-shadow: 0 4px 16px rgba(0, 217, 255, 0.2);
-- 359         }
-- 360 
-- 361         .server-input-group {
-- 362             display: grid;
-- 363             grid-template-columns: 1fr auto;
-- 364             gap: 1rem;
-- 365             align-items: end;
-- 366         }
-- 367 
-- 368         @media (max-width: 768px) {
-- 369             h1 {
-- 370                 font-size: 1.8rem;
-- 371             }
-- 372 
-- 373             .container {
-- 374                 padding: 1rem;
-- 375             }
-- 376 
-- 377             .card {
-- 378                 padding: 1.5rem;
-- 379             }
-- 380 
-- 381             .filters {
-- 382                 justify-content: center;
-- 383             }
-- 384 
-- 385             .servers-table {
-- 386                 font-size: 0.75rem;
-- 387             }
-- 388 
-- 389             .servers-table th,
-- 390             .servers-table td {
-- 391                 padding: 0.5rem;
-- 392             }
-- 393 
-- 394             .server-input-group {
-- 395                 grid-template-columns: 1fr;
-- 396             }
-- 397         }
-- 398 
-- 399         .empty-state {
-- 400             text-align: center;
-- 401             padding: 4rem 2rem;
-- 402             color: var(--text-secondary);
-- 403         }
-- 404 
-- 405         .empty-state-icon {
-- 406             font-size: 4rem;
-- 407             margin-bottom: 1rem;
-- 408             opacity: 0.5;
-  237         }
-  238 
-  239         .table-container {
-  242             overflow-y: auto;
-  243         }
-  244 
-+ 245         .empty-state {
-+ 246             text-align: center;
-+ 247             padding: 40px;
-+ 248             color: var(--text-light);
-+ 249         }
-+ 250 
-  251         .progress-bar {
-  252             width: 100%;
-  253             height: 4px;
-- 420             background: var(--bg-secondary);
-+ 254             background: var(--border);
-  255             border-radius: 2px;
-+ 256             margin-top: 10px;
-  257             overflow: hidden;
-- 423             margin-top: 1rem;
-  258         }
-  259 
-  260         .progress-fill {
-  261             height: 100%;
-- 428             background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
-- 429             transition: width 0.3s ease;
-- 430             animation: shimmer 2s infinite;
-- 431         }
-- 432 
-- 433         @keyframes shimmer {
-- 434             0% { opacity: 0.6; }
-- 435             50% { opacity: 1; }
-- 436             100% { opacity: 0.6; }
-+ 262             background: var(--primary);
-+ 263             transition: width 0.3s;
-+ 264         }
-+ 265 
-+ 266         @media (max-width: 768px) {
-+ 267             body {
-+ 268                 padding: 10px;
-+ 269             }
-+ 270 
-+ 271             .card {
-+ 272                 padding: 15px;
-+ 273             }
-+ 274 
-+ 275             th, td {
-+ 276                 padding: 8px;
-+ 277                 font-size: 0.9rem;
-+ 278             }
-  279         }
-  280     </style>
-  281 </head>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCcam Server Checker</title>
+    <style>
+        :root {
+            --bg: #f5f5f5;
+            --card-bg: #ffffff;
+            --text: #333333;
+            --text-light: #666666;
+            --border: #dddddd;
+            --primary: #007bff;
+            --success: #28a745;
+            --error: #dc3545;
+            --warning: #ffc107;
+        }
+
+        .dark {
+            --bg: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --text: #ffffff;
+            --text-light: #aaaaaa;
+            --border: #444444;
+            --primary: #0d6efd;
+            --success: #28a745;
+            --error: #dc3545;
+            --warning: #ffc107;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-light);
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: monospace;
+            font-size: 14px;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-danger {
+            background: var(--error);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--bg);
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .stat-card.online { border-left-color: var(--success); }
+        .stat-card.offline { border-left-color: var(--error); }
+        .stat-card.testing { border-left-color: var(--warning); }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+            color: var(--text);
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--bg);
+            font-weight: bold;
+        }
+
+        tr:hover {
+            background: var(--bg);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .status-online {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-testing {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .dark .status-online {
+            background: #1e4620;
+            color: #75ff75;
+        }
+
+        .dark .status-offline {
+            background: #5a1a1a;
+            color: #ff7575;
+        }
+
+        .dark .status-testing {
+            background: #5a4e1a;
+            color: #ffd975;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-light);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .card {
+                padding: 15px;
+            }
+
+            th, td {
+                padding: 8px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>CCcam Server Checker</h1>
+            <p class="subtitle">Vérifiez et gérez vos serveurs CCcam</p>
+        </header>
+
+        <!-- Manual Input Section -->
+        <div class="card">
+            <h2 class="card-title">Saisie des Serveurs</h2>
+            <textarea id="serverInput" placeholder="Collez vos clines ici (une par ligne)&#10;Format: C: host port username password&#10;&#10;Exemple:&#10;C: cccam.ugeen.live 28000 95146 ugeen&#10;C: server.example.com 12000 user1 pass1"></textarea>
+            <button class="btn" onclick="parseManualInput()">Analyser</button>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="card" id="statsCard" style="display: none;">
+            <h2 class="card-title">Statistiques</h2>
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalCount">0</div>
+                    <div class="stat-label">Total</div>
+                </div>
+                <div class="stat-card online">
+                    <div class="stat-value" id="onlineCount" style="color: var(--success);">0</div>
+                    <div class="stat-label">En Ligne</div>
+                </div>
+                <div class="stat-card offline">
+                    <div class="stat-value" id="offlineCount" style="color: var(--error);">0</div>
+                    <div class="stat-label">Hors Ligne</div>
+                </div>
+                <div class="stat-card testing">
+                    <div class="stat-value" id="testingCount" style="color: var(--warning);">0</div>
+                    <div class="stat-label">En Test</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="card" id="filtersCard" style="display: none;">
+            <h2 class="card-title">Filtres</h2>
+            <div class="filters">
+                <button class="filter-btn active" onclick="filterServers('all')">Tous</button>
+                <button class="filter-btn" onclick="filterServers('online')">En Ligne</button>
+                <button class="filter-btn" onclick="filterServers('offline')">Hors Ligne</button>
+                <button class="filter-btn" onclick="filterServers('testing')">En Test</button>
+            </div>
+        </div>
+
+        <!-- Servers Table -->
+        <div class="card" id="serversCard" style="display: none;">
+            <h2 class="card-title">Liste des Serveurs</h2>
+
+            <div class="action-btns">
+                <button class="btn" onclick="testAllServers()">Tester Tous</button>
+                <button class="btn btn-secondary" onclick="exportResults()">Exporter</button>
+                <button class="btn btn-danger" onclick="clearServers()">Effacer Tout</button>
+            </div>
+
+            <div id="testProgress" style="display: none;">
+                <p style="color: var(--text-light);">Test en cours...</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Hôte</th>
+                            <th>Port</th>
+                            <th>Utilisateur</th>
+                            <th>Mot de passe</th>
+                            <th>Statut</th>
+                            <th>Temps</th>
+                        </tr>
+                    </thead>
+                    <tbody id="serversTableBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="emptyState" class="empty-state">
+                <p>Aucun serveur à afficher</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark/Light mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        let servers = [];
+        let currentFilter = 'all';
+
+        function parseClines(text) {
+            const lines = text.split('\n');
+            let parsed = 0;
+
+            lines.forEach(line => {
+                // Flexible regex to parse clines with various formats
+                // Matches: C: host port username password
+                // Also handles extra spaces, tabs, dashes, etc.
+                const clineRegex = /C\s*:\s*([a-zA-Z0-9\.\-_]+)\s+(\d+)\s+([a-zA-Z0-9\.\-_]+)\s+([a-zA-Z0-9\.\-_]+)/i;
+                const match = line.match(clineRegex);
+
+                if (match) {
+                    const server = {
+                        id: servers.length + 1,
+                        host: match[1].trim(),
+                        port: match[2].trim(),
+                        username: match[3].trim(),
+                        password: match[4].trim(),
+                        status: 'testing',
+                        responseTime: '-'
+                    };
+                    servers.push(server);
+                    parsed++;
+                }
+            });
+
+            if (parsed > 0) {
+                showNotification(`${parsed} serveur(s) ajouté(s) avec succès`, 'success');
+                updateDisplay();
+                testAllServers();
+            } else {
+                showNotification('Aucun serveur valide trouvé', 'error');
+            }
+        }
+
+        function parseManualInput() {
+            const input = document.getElementById('serverInput').value;
+            if (!input.trim()) {
+                showNotification('Veuillez entrer au moins une cline', 'error');
+                return;
+            }
+
+            parseClines(input);
+        }
+
+        function updateDisplay() {
+            if (servers.length === 0) {
+                document.getElementById('statsCard').style.display = 'none';
+                document.getElementById('filtersCard').style.display = 'none';
+                document.getElementById('serversCard').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('statsCard').style.display = 'block';
+            document.getElementById('filtersCard').style.display = 'block';
+            document.getElementById('serversCard').style.display = 'block';
+
+            updateStats();
+            renderServers();
+        }
+
+        function updateStats() {
+            const total = servers.length;
+            const online = servers.filter(s => s.status === 'online').length;
+            const offline = servers.filter(s => s.status === 'offline').length;
+            const testing = servers.filter(s => s.status === 'testing').length;
+
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('onlineCount').textContent = online;
+            document.getElementById('offlineCount').textContent = offline;
+            document.getElementById('testingCount').textContent = testing;
+        }
+
+        function renderServers() {
+            const tbody = document.getElementById('serversTableBody');
+            const emptyState = document.getElementById('emptyState');
+
+            let filteredServers = servers;
+            if (currentFilter !== 'all') {
+                filteredServers = servers.filter(s => s.status === currentFilter);
+            }
+
+            if (filteredServers.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            tbody.innerHTML = filteredServers.map(server => `
+                <tr>
+                    <td>${server.id}</td>
+                    <td>${server.host}</td>
+                    <td>${server.port}</td>
+                    <td>${server.username}</td>
+                    <td>${server.password}</td>
+                    <td>
+                        <span class="status-badge status-${server.status}">
+                            ${server.status === 'online' ? '✅ En ligne' :
+                              server.status === 'offline' ? '❌ Hors ligne' :
+                              '🔄 Test en cours'}
+                        </span>
+                    </td>
+                    <td>${server.responseTime}</td>
+                </tr>
+            `).join('');
+        }
+
+        function filterServers(filter) {
+            currentFilter = filter;
+
+            // Update filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            renderServers();
+        }
+
+        async function testAllServers() {
+            if (servers.length === 0) return;
+
+            document.getElementById('testProgress').style.display = 'block';
+
+            for (let i = 0; i < servers.length; i++) {
+                await testServer(i);
+
+                // Update progress
+                const progress = ((i + 1) / servers.length) * 100;
+                document.getElementById('progressFill').style.width = progress + '%';
+
+                updateStats();
+                renderServers();
+            }
+
+            document.getElementById('testProgress').style.display = 'none';
+            showNotification('Test de tous les serveurs terminé', 'success');
+        }
+
+        async function testServer(index) {
+            // Simulation of server testing
+            // In a real scenario, you'd need a backend service to test CCcam servers
+            // as browsers can't make direct TCP connections
+
+            servers[index].status = 'testing';
+            renderServers();
+
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    // Simulate random results for demonstration
+                    // In production, replace with actual server testing logic
+                    const isOnline = Math.random() > 0.3; // 70% chance online
+
+                    servers[index].status = isOnline ? 'online' : 'offline';
+                    servers[index].responseTime = isOnline ?
+                        `${Math.floor(Math.random() * 500) + 50}ms` :
+                        'Timeout';
+
+                    resolve();
+                }, Math.random() * 1000 + 500); // Random delay between 500-1500ms
+            });
+        }
+
+        function clearServers() {
+            showConfirmDialog('Êtes-vous sûr de vouloir effacer tous les serveurs ?', () => {
+                servers = [];
+                updateDisplay();
+                showNotification('Tous les serveurs ont été effacés', 'success');
+            });
+        }
+
+        function exportResults() {
+            if (servers.length === 0) {
+                showNotification('Aucun serveur à exporter', 'error');
+                return;
+            }
+
+            // Create CSV content
+            let csv = 'Hôte,Port,Utilisateur,Mot de passe,Statut,Temps de réponse\n';
+            servers.forEach(server => {
+                csv += `${server.host},${server.port},${server.username},${server.password},${server.status},${server.responseTime}\n`;
+            });
+
+            // Download CSV
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `cccam_servers_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+
+            showNotification('Résultats exportés avec succès', 'success');
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? 'var(--success)' : 'var(--error)'};
+                color: white;
+                padding: 1rem 2rem;
+                border-radius: 8px;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+                font-family: 'Outfit', sans-serif;
+                font-weight: 600;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        function showConfirmDialog(message, onConfirm) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.7);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 2000;
+                animation: fadeIn 0.3s ease;
+            `;
+
+            modal.innerHTML = `
+                <div style="
+                    background: var(--bg-card);
+                    padding: 2rem;
+                    border-radius: 16px;
+                    max-width: 400px;
+                    width: 90%;
+                    box-shadow: 0 16px 64px rgba(0,0,0,0.5);
+                    border: 1px solid var(--border);
+                ">
+                    <p style="color: var(--text-primary); margin-bottom: 2rem; font-size: 1.1rem;">${message}</p>
+                    <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                        <button id="cancelBtn" style="
+                            padding: 0.8rem 1.5rem;
+                            background: var(--bg-secondary);
+                            color: var(--text-primary);
+                            border: 2px solid var(--border);
+                            border-radius: 8px;
+                            cursor: pointer;
+                            font-weight: 600;
+                        ">Annuler</button>
+                        <button id="confirmBtn" style="
+                            padding: 0.8rem 1.5rem;
+                            background: var(--error);
+                            color: white;
+                            border: none;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            font-weight: 600;
+                        ">Confirmer</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            modal.querySelector('#cancelBtn').addEventListener('click', () => {
+                modal.remove();
+            });
+
+            modal.querySelector('#confirmBtn').addEventListener('click', () => {
+                modal.remove();
+                onConfirm();
+            });
+        }
+
+        // Add CSS animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            @keyframes slideOut {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
