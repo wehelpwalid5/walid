@@ -2,20 +2,838 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Mon Site GitHub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Code Editor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Fira+Code:wght@400;500;600&family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: Arial;
-            background: #f0f0f0;
-            padding: 50px;
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #1c2128;
+            --border-color: #30363d;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent-html: #e34c26;
+            --accent-css: #2965f1;
+            --accent-js: #f7df1e;
+            --preview-bg: #21262d;
         }
-        h1 {
-            color: #0366d6;
+
+        .dark:root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #1c2128;
+            --border-color: #30363d;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --preview-bg: #21262d;
+        }
+
+        body.light-mode {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f6f8fa;
+            --bg-tertiary: #eef1f5;
+            --border-color: #d0d7de;
+            --text-primary: #24292f;
+            --text-secondary: #57606a;
+            --preview-bg: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Ubuntu', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        .header {
+            background-color: var(--bg-secondary);
+            border-bottom: 2px solid var(--border-color);
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-html), var(--accent-css), var(--accent-js));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .editors-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-secondary);
+            border-right: 2px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-bottom: 2px solid var(--border-color);
+            min-height: 0;
+        }
+
+        .editor-container:last-child {
+            border-bottom: none;
+        }
+
+        .editor-header {
+            background-color: var(--bg-tertiary);
+            padding: 0.75rem 1rem;
+            font-family: 'Fira Code', monospace;
+            font-weight: 600;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .editor-header.html { color: var(--accent-html); }
+        .editor-header.css { color: var(--accent-css); }
+        .editor-header.js { color: var(--accent-js); }
+
+        .icon {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .icon.html { background-color: var(--accent-html); }
+        .icon.css { background-color: var(--accent-css); }
+        .icon.js { background-color: var(--accent-js); }
+
+        textarea {
+            flex: 1;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            border: none;
+            padding: 1rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 16px;
+            resize: none;
+            outline: none;
+            line-height: 1.6;
+            overflow-y: auto;
+        }
+
+        textarea::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.5;
+        }
+
+        .preview-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-primary);
+        }
+
+        .preview-header {
+            background-color: var(--bg-tertiary);
+            padding: 0.75rem 1rem;
+            font-family: 'Fira Code', monospace;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .preview-iframe {
+            flex: 1;
+            border: none;
+            background-color: var(--preview-bg);
+        }
+
+        .theme-toggle {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Ubuntu', sans-serif;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--bg-primary);
+            border-color: var(--accent-css);
+        }
+
+        .clear-btn {
+            background-color: var(--accent-html);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Ubuntu', sans-serif;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .clear-btn:hover {
+            opacity: 0.8;
+        }
+
+        .tabs-container {
+            background-color: var(--bg-secondary);
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            gap: 0;
+            padding: 0 1rem;
+        }
+
+        .tab {
+            padding: 0.875rem 1.5rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.875rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .tab:hover {
+            color: var(--text-primary);
+            background-color: var(--bg-tertiary);
+        }
+
+        .tab.active {
+            color: var(--text-primary);
+            border-bottom-color: var(--accent-css);
+            font-weight: 600;
+        }
+
+        .tab-content {
+            display: none;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        .separator-container, .merger-container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            padding: 2rem;
+            gap: 1.5rem;
+            overflow-y: auto;
+            background-color: var(--bg-primary);
+        }
+
+        .tool-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .tool-title {
+            font-family: 'Ubuntu', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tool-description {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .code-input, .code-output {
+            background-color: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 16px;
+            color: var(--text-primary);
+            min-height: 200px;
+            resize: vertical;
+            width: 100%;
+        }
+
+        .code-output {
+            background-color: var(--bg-tertiary);
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, var(--accent-css), var(--accent-html));
+            color: white;
+            border: none;
+            padding: 0.875rem 2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Ubuntu', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            align-self: flex-start;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .output-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .output-label {
+            font-family: 'Fira Code', monospace;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .copy-btn {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 0.375rem 0.875rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Ubuntu', sans-serif;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+            margin-left: auto;
+        }
+
+        .copy-btn:hover {
+            background-color: var(--accent-css);
+            color: white;
+            border-color: var(--accent-css);
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+
+            .editors-panel {
+                border-right: none;
+                border-bottom: 2px solid var(--border-color);
+            }
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
         }
     </style>
 </head>
 <body>
-    <h1>Bienvenue sur mon site GitHub Pages !</h1>
-    <p>Ceci est ma première page hébergée gratuitement grâce à GitHub.</p>
+    <div class="container">
+        <header class="header">
+            <div class="logo">&lt;/&gt; Live Code Editor</div>
+            <div style="display: flex; gap: 0.75rem;">
+                <button class="clear-btn" onclick="clearAll()">Effacer tout</button>
+                <button class="theme-toggle" onclick="toggleTheme()">🌓 Thème</button>
+            </div>
+        </header>
+
+        <div class="tabs-container">
+            <button class="tab active" onclick="switchTab('editor')">📝 Éditeur</button>
+            <button class="tab" onclick="switchTab('separator')">🔀 Séparer le code</button>
+            <button class="tab" onclick="switchTab('merger')">🔗 Regrouper le code</button>
+        </div>
+
+        <div class="main-content" id="tab-editor">
+            <div class="editors-panel">
+                <div class="editor-container">
+                    <div class="editor-header html">
+                        <span class="icon html"></span>
+                        HTML
+                    </div>
+                    <textarea id="htmlCode" placeholder="<!-- Écrivez votre code HTML ici -->"
+                              oninput="updatePreview()"></textarea>
+                </div>
+
+                <div class="editor-container">
+                    <div class="editor-header css">
+                        <span class="icon css"></span>
+                        CSS
+                    </div>
+                    <textarea id="cssCode" placeholder="/* Écrivez votre code CSS ici */"
+                              oninput="updatePreview()"></textarea>
+                </div>
+
+                <div class="editor-container">
+                    <div class="editor-header js">
+                        <span class="icon js"></span>
+                        JavaScript
+                    </div>
+                    <textarea id="jsCode" placeholder="// Écrivez votre code JavaScript ici"
+                              oninput="updatePreview()"></textarea>
+                </div>
+            </div>
+
+            <div class="preview-panel">
+                <div class="preview-header">
+                    <span>📱 Prévisualisation en direct</span>
+                    <span style="font-size: 0.75rem; color: var(--text-secondary);">Mise à jour en temps réel</span>
+                </div>
+                <iframe id="preview" class="preview-iframe"></iframe>
+            </div>
+        </div>
+
+        <!-- Onglet Séparer le code -->
+        <div class="separator-container tab-content" id="tab-separator">
+            <div class="tool-section">
+                <div class="tool-title">🔀 Séparer le code HTML complet</div>
+                <div class="tool-description">
+                    Collez votre code HTML complet (avec les balises &lt;style&gt; et &lt;script&gt;) et obtenez les trois parties séparées.
+                </div>
+                <textarea class="code-input" id="fullCode" placeholder="Collez votre code HTML complet ici..."></textarea>
+                <button class="action-btn" onclick="separateCode()">🚀 Séparer le code</button>
+            </div>
+
+            <div class="output-group" id="separatedOutput" style="display: none;">
+                <div class="tool-title">✨ Code séparé</div>
+
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <div class="output-label">
+                        <span class="icon html"></span>
+                        HTML
+                        <button class="copy-btn" onclick="copyToClipboard('separatedHtml')">📋 Copier</button>
+                    </div>
+                    <textarea class="code-output" id="separatedHtml" readonly></textarea>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <div class="output-label">
+                        <span class="icon css"></span>
+                        CSS
+                        <button class="copy-btn" onclick="copyToClipboard('separatedCss')">📋 Copier</button>
+                    </div>
+                    <textarea class="code-output" id="separatedCss" readonly></textarea>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <div class="output-label">
+                        <span class="icon js"></span>
+                        JavaScript
+                        <button class="copy-btn" onclick="copyToClipboard('separatedJs')">📋 Copier</button>
+                    </div>
+                    <textarea class="code-output" id="separatedJs" readonly></textarea>
+                </div>
+
+                <button class="action-btn" onclick="sendToEditor()">📤 Envoyer vers l'éditeur</button>
+            </div>
+        </div>
+
+        <!-- Onglet Regrouper le code -->
+        <div class="merger-container tab-content" id="tab-merger">
+            <div class="tool-section">
+                <div class="tool-title">🔗 Regrouper les codes en un seul fichier HTML</div>
+                <div class="tool-description">
+                    Entrez vos codes HTML, CSS et JavaScript séparés et obtenez un fichier HTML complet.
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <div class="output-label">
+                        <span class="icon html"></span>
+                        HTML
+                    </div>
+                    <textarea class="code-input" id="mergeHtml" placeholder="Votre code HTML..."></textarea>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <div class="output-label">
+                        <span class="icon css"></span>
+                        CSS
+                    </div>
+                    <textarea class="code-input" id="mergeCss" placeholder="Votre code CSS..."></textarea>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <div class="output-label">
+                        <span class="icon js"></span>
+                        JavaScript
+                    </div>
+                    <textarea class="code-input" id="mergeJs" placeholder="Votre code JavaScript..."></textarea>
+                </div>
+
+                <button class="action-btn" onclick="mergeCode()">🚀 Regrouper le code</button>
+                <button class="action-btn" style="background: linear-gradient(135deg, #43e97b, #38f9d7);" onclick="importFromEditor()">📥 Importer depuis l'éditeur</button>
+            </div>
+
+            <div class="output-group" id="mergedOutput" style="display: none;">
+                <div class="tool-title">✨ Fichier HTML complet</div>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <div class="output-label">
+                        Résultat
+                        <button class="copy-btn" onclick="copyToClipboard('mergedCode')">📋 Copier</button>
+                        <button class="copy-btn" onclick="downloadFile()">💾 Télécharger</button>
+                    </div>
+                    <textarea class="code-output" id="mergedCode" readonly style="min-height: 400px;"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Détection du mode sombre/clair
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.remove('light-mode');
+        } else {
+            document.body.classList.add('light-mode');
+        }
+
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.body.classList.remove('light-mode');
+            } else {
+                document.body.classList.add('light-mode');
+            }
+        });
+
+        let updateTimeout;
+
+        function updatePreview() {
+            clearTimeout(updateTimeout);
+            updateTimeout = setTimeout(() => {
+                const htmlCode = document.getElementById('htmlCode').value;
+                const cssCode = document.getElementById('cssCode').value;
+                const jsCode = document.getElementById('jsCode').value;
+
+                const preview = document.getElementById('preview');
+                const previewDocument = preview.contentDocument || preview.contentWindow.document;
+
+                const content = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <style>${cssCode}</style>
+                    </head>
+                    <body>
+                        ${htmlCode}
+                        <script>
+                            try {
+                                ${jsCode}
+                            } catch (error) {
+                                console.error('Erreur JavaScript:', error);
+                            }
+                        <\/script>
+                    </body>
+                    </html>
+                `;
+
+                previewDocument.open();
+                previewDocument.write(content);
+                previewDocument.close();
+            }, 300);
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+        }
+
+        function clearAll() {
+            document.getElementById('htmlCode').value = '';
+            document.getElementById('cssCode').value = '';
+            document.getElementById('jsCode').value = '';
+            updatePreview();
+        }
+
+        // Gestion des onglets
+        function switchTab(tabName) {
+            // Masquer tous les contenus
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById('tab-editor').style.display = 'none';
+
+            // Désactiver tous les onglets
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Activer l'onglet sélectionné
+            event.target.classList.add('active');
+
+            // Afficher le contenu correspondant
+            if (tabName === 'editor') {
+                document.getElementById('tab-editor').style.display = 'flex';
+            } else if (tabName === 'separator') {
+                document.getElementById('tab-separator').classList.add('active');
+            } else if (tabName === 'merger') {
+                document.getElementById('tab-merger').classList.add('active');
+            }
+        }
+
+        // Fonction pour séparer le code
+        function separateCode() {
+            const fullCode = document.getElementById('fullCode').value;
+
+            if (!fullCode.trim()) {
+                showNotification('⚠️ Veuillez entrer du code à séparer');
+                return;
+            }
+
+            // Extraire le CSS
+            const styleRegex = /<style[^>]*>([\s\S]*?)<\/style>/gi;
+            let css = '';
+            let match;
+            while ((match = styleRegex.exec(fullCode)) !== null) {
+                css += match[1] + '\n';
+            }
+
+            // Extraire le JavaScript
+            const scriptRegex = /<script[^>]*>([\s\S]*?)<\/script>/gi;
+            let js = '';
+            while ((match = scriptRegex.exec(fullCode)) !== null) {
+                // Ne pas inclure les scripts avec src
+                if (!match[0].includes('src=')) {
+                    js += match[1] + '\n';
+                }
+            }
+
+            // Extraire le HTML (en retirant les balises style et script)
+            let html = fullCode
+                .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+                .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+                .replace(/<!DOCTYPE html>/gi, '')
+                .replace(/<html[^>]*>/gi, '')
+                .replace(/<\/html>/gi, '')
+                .replace(/<head[^>]*>[\s\S]*?<\/head>/gi, '')
+                .replace(/<body[^>]*>/gi, '')
+                .replace(/<\/body>/gi, '')
+                .trim();
+
+            // Afficher les résultats
+            document.getElementById('separatedHtml').value = html;
+            document.getElementById('separatedCss').value = css.trim();
+            document.getElementById('separatedJs').value = js.trim();
+            document.getElementById('separatedOutput').style.display = 'flex';
+
+            showNotification('✅ Code séparé avec succès !');
+        }
+
+        // Fonction pour regrouper le code
+        function mergeCode() {
+            const html = document.getElementById('mergeHtml').value;
+            const css = document.getElementById('mergeCss').value;
+            const js = document.getElementById('mergeJs').value;
+
+            if (!html && !css && !js) {
+                showNotification('⚠️ Veuillez entrer au moins un type de code');
+                return;
+            }
+
+            let merged = '<!DOCTYPE html>\n<html lang="fr">\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>Document</title>';
+
+            if (css) {
+                merged += '\n    <style>\n' + css + '\n    </style>';
+            }
+
+            merged += '\n</head>\n<body>\n' + html;
+
+            if (js) {
+                merged += '\n    <script>\n' + js + '\n    <\/script>';
+            }
+
+            merged += '\n</body>\n</html>';
+
+            document.getElementById('mergedCode').value = merged;
+            document.getElementById('mergedOutput').style.display = 'flex';
+
+            showNotification('✅ Code regroupé avec succès !');
+        }
+
+        // Envoyer le code séparé vers l'éditeur
+        function sendToEditor() {
+            document.getElementById('htmlCode').value = document.getElementById('separatedHtml').value;
+            document.getElementById('cssCode').value = document.getElementById('separatedCss').value;
+            document.getElementById('jsCode').value = document.getElementById('separatedJs').value;
+            updatePreview();
+            switchTab('editor');
+            document.querySelector('.tab').click();
+            showNotification('✅ Code envoyé vers l\'éditeur !');
+        }
+
+        // Importer depuis l'éditeur
+        function importFromEditor() {
+            document.getElementById('mergeHtml').value = document.getElementById('htmlCode').value;
+            document.getElementById('mergeCss').value = document.getElementById('cssCode').value;
+            document.getElementById('mergeJs').value = document.getElementById('jsCode').value;
+            showNotification('✅ Code importé depuis l\'éditeur !');
+        }
+
+        // Copier dans le presse-papier
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            element.select();
+            document.execCommand('copy');
+            showNotification('📋 Code copié dans le presse-papier !');
+        }
+
+        // Télécharger le fichier
+        function downloadFile() {
+            const code = document.getElementById('mergedCode').value;
+            const blob = new Blob([code], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'index.html';
+            a.click();
+            URL.revokeObjectURL(url);
+            showNotification('💾 Fichier téléchargé !');
+        }
+
+        // Afficher une notification
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 20px;
+                background: linear-gradient(135deg, var(--accent-css), var(--accent-html));
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                font-family: 'Ubuntu', sans-serif;
+                font-weight: 600;
+                box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+                z-index: 10000;
+                animation: slideIn 0.3s ease-out;
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Charge un exemple au démarrage
+        window.addEventListener('load', () => {
+            document.getElementById('htmlCode').value = `<div class="demo-container">
+  <h1>Bienvenue dans l'éditeur de code en direct !</h1>
+  <p>Modifiez le code HTML, CSS ou JavaScript pour voir les changements en temps réel.</p>
+  <button onclick="changeColor()">Changer la couleur</button>
+</div>`;
+
+            document.getElementById('cssCode').value = `body {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+.demo-container {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  text-align: center;
+}
+
+h1 {
+  color: #667eea;
+  margin-bottom: 15px;
+}
+
+p {
+  color: #555;
+  margin-bottom: 20px;
+}
+
+button {
+  background-color: #667eea;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: transform 0.2s;
+}
+
+button:hover {
+  transform: scale(1.05);
+}`;
+
+            document.getElementById('jsCode').value = `function changeColor() {
+  const colors = ['#667eea', '#f093fb', '#4facfe', '#43e97b', '#fa709a'];
+  const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+  const title = document.querySelector('h1');
+  title.style.color = randomColor;
+
+  const button = document.querySelector('button');
+  button.style.backgroundColor = randomColor;
+}`;
+
+            updatePreview();
+        });
+    </script>
 </body>
 </html>
