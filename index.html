@@ -1,839 +1,766 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Code Editor</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Fira+Code:wght@400;500;600&family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-primary: #0d1117;
-            --bg-secondary: #161b22;
-            --bg-tertiary: #1c2128;
-            --border-color: #30363d;
-            --text-primary: #c9d1d9;
-            --text-secondary: #8b949e;
-            --accent-html: #e34c26;
-            --accent-css: #2965f1;
-            --accent-js: #f7df1e;
-            --preview-bg: #21262d;
-        }
-
-        .dark:root {
-            --bg-primary: #0d1117;
-            --bg-secondary: #161b22;
-            --bg-tertiary: #1c2128;
-            --border-color: #30363d;
-            --text-primary: #c9d1d9;
-            --text-secondary: #8b949e;
-            --preview-bg: #21262d;
-        }
-
-        body.light-mode {
-            --bg-primary: #ffffff;
-            --bg-secondary: #f6f8fa;
-            --bg-tertiary: #eef1f5;
-            --border-color: #d0d7de;
-            --text-primary: #24292f;
-            --text-secondary: #57606a;
-            --preview-bg: #ffffff;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Ubuntu', sans-serif;
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            overflow: hidden;
-            height: 100vh;
-        }
-
-        .container {
-            display: flex;
-            height: 100vh;
-            flex-direction: column;
-        }
-
-        .header {
-            background-color: var(--bg-secondary);
-            border-bottom: 2px solid var(--border-color);
-            padding: 1rem 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--accent-html), var(--accent-css), var(--accent-js));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .main-content {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-        }
-
-        .editors-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background-color: var(--bg-secondary);
-            border-right: 2px solid var(--border-color);
-            overflow: hidden;
-        }
-
-        .editor-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            border-bottom: 2px solid var(--border-color);
-            min-height: 0;
-        }
-
-        .editor-container:last-child {
-            border-bottom: none;
-        }
-
-        .editor-header {
-            background-color: var(--bg-tertiary);
-            padding: 0.75rem 1rem;
-            font-family: 'Fira Code', monospace;
-            font-weight: 600;
-            font-size: 0.875rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .editor-header.html { color: var(--accent-html); }
-        .editor-header.css { color: var(--accent-css); }
-        .editor-header.js { color: var(--accent-js); }
-
-        .icon {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-
-        .icon.html { background-color: var(--accent-html); }
-        .icon.css { background-color: var(--accent-css); }
-        .icon.js { background-color: var(--accent-js); }
-
-        textarea {
-            flex: 1;
-            background-color: var(--bg-secondary);
-            color: var(--text-primary);
-            border: none;
-            padding: 1rem;
-            font-family: 'Fira Code', monospace;
-            font-size: 16px;
-            resize: none;
-            outline: none;
-            line-height: 1.6;
-            overflow-y: auto;
-        }
-
-        textarea::placeholder {
-            color: var(--text-secondary);
-            opacity: 0.5;
-        }
-
-        .preview-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background-color: var(--bg-primary);
-        }
-
-        .preview-header {
-            background-color: var(--bg-tertiary);
-            padding: 0.75rem 1rem;
-            font-family: 'Fira Code', monospace;
-            font-weight: 600;
-            font-size: 0.875rem;
-            color: var(--text-primary);
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .preview-iframe {
-            flex: 1;
-            border: none;
-            background-color: var(--preview-bg);
-        }
-
-        .theme-toggle {
-            background-color: var(--bg-tertiary);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-family: 'Ubuntu', sans-serif;
-            font-size: 0.875rem;
-            transition: all 0.2s;
-        }
-
-        .theme-toggle:hover {
-            background-color: var(--bg-primary);
-            border-color: var(--accent-css);
-        }
-
-        .clear-btn {
-            background-color: var(--accent-html);
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-family: 'Ubuntu', sans-serif;
-            font-size: 0.875rem;
-            transition: all 0.2s;
-        }
-
-        .clear-btn:hover {
-            opacity: 0.8;
-        }
-
-        .tabs-container {
-            background-color: var(--bg-secondary);
-            border-bottom: 2px solid var(--border-color);
-            display: flex;
-            gap: 0;
-            padding: 0 1rem;
-        }
-
-        .tab {
-            padding: 0.875rem 1.5rem;
-            font-family: 'Fira Code', monospace;
-            font-size: 0.875rem;
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            transition: all 0.2s;
-            font-weight: 500;
-        }
-
-        .tab:hover {
-            color: var(--text-primary);
-            background-color: var(--bg-tertiary);
-        }
-
-        .tab.active {
-            color: var(--text-primary);
-            border-bottom-color: var(--accent-css);
-            font-weight: 600;
-        }
-
-        .tab-content {
-            display: none;
-            flex: 1;
-            overflow: hidden;
-        }
-
-        .tab-content.active {
-            display: flex;
-        }
-
-        .separator-container, .merger-container {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-            padding: 2rem;
-            gap: 1.5rem;
-            overflow-y: auto;
-            background-color: var(--bg-primary);
-        }
-
-        .tool-section {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .tool-title {
-            font-family: 'Ubuntu', sans-serif;
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .tool-description {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .code-input, .code-output {
-            background-color: var(--bg-secondary);
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            padding: 1rem;
-            font-family: 'Fira Code', monospace;
-            font-size: 16px;
-            color: var(--text-primary);
-            min-height: 200px;
-            resize: vertical;
-            width: 100%;
-        }
-
-        .code-output {
-            background-color: var(--bg-tertiary);
-        }
-
-        .action-btn {
-            background: linear-gradient(135deg, var(--accent-css), var(--accent-html));
-            color: white;
-            border: none;
-            padding: 0.875rem 2rem;
-            border-radius: 8px;
-            cursor: pointer;
-            font-family: 'Ubuntu', sans-serif;
-            font-size: 1rem;
-            font-weight: 600;
-            transition: all 0.2s;
-            align-self: flex-start;
-        }
-
-        .action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .output-group {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .output-label {
-            font-family: 'Fira Code', monospace;
-            font-weight: 600;
-            font-size: 0.875rem;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .copy-btn {
-            background-color: var(--bg-tertiary);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-            padding: 0.375rem 0.875rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-family: 'Ubuntu', sans-serif;
-            font-size: 0.75rem;
-            transition: all 0.2s;
-            margin-left: auto;
-        }
-
-        .copy-btn:hover {
-            background-color: var(--accent-css);
-            color: white;
-            border-color: var(--accent-css);
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                flex-direction: column;
-            }
-
-            .editors-panel {
-                border-right: none;
-                border-bottom: 2px solid var(--border-color);
-            }
-        }
-
-        /* Scrollbar styling */
-        ::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--bg-secondary);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 5px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--text-secondary);
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <header class="header">
-            <div class="logo">&lt;/&gt; Live Code Editor</div>
-            <div style="display: flex; gap: 0.75rem;">
-                <button class="clear-btn" onclick="clearAll()">Effacer tout</button>
-                <button class="theme-toggle" onclick="toggleTheme()">🌓 Thème</button>
-            </div>
-        </header>
-
-        <div class="tabs-container">
-            <button class="tab active" onclick="switchTab('editor')">📝 Éditeur</button>
-            <button class="tab" onclick="switchTab('separator')">🔀 Séparer le code</button>
-            <button class="tab" onclick="switchTab('merger')">🔗 Regrouper le code</button>
-        </div>
-
-        <div class="main-content" id="tab-editor">
-            <div class="editors-panel">
-                <div class="editor-container">
-                    <div class="editor-header html">
-                        <span class="icon html"></span>
-                        HTML
-                    </div>
-                    <textarea id="htmlCode" placeholder="<!-- Écrivez votre code HTML ici -->"
-                              oninput="updatePreview()"></textarea>
-                </div>
-
-                <div class="editor-container">
-                    <div class="editor-header css">
-                        <span class="icon css"></span>
-                        CSS
-                    </div>
-                    <textarea id="cssCode" placeholder="/* Écrivez votre code CSS ici */"
-                              oninput="updatePreview()"></textarea>
-                </div>
-
-                <div class="editor-container">
-                    <div class="editor-header js">
-                        <span class="icon js"></span>
-                        JavaScript
-                    </div>
-                    <textarea id="jsCode" placeholder="// Écrivez votre code JavaScript ici"
-                              oninput="updatePreview()"></textarea>
-                </div>
-            </div>
-
-            <div class="preview-panel">
-                <div class="preview-header">
-                    <span>📱 Prévisualisation en direct</span>
-                    <span style="font-size: 0.75rem; color: var(--text-secondary);">Mise à jour en temps réel</span>
-                </div>
-                <iframe id="preview" class="preview-iframe"></iframe>
-            </div>
-        </div>
-
-        <!-- Onglet Séparer le code -->
-        <div class="separator-container tab-content" id="tab-separator">
-            <div class="tool-section">
-                <div class="tool-title">🔀 Séparer le code HTML complet</div>
-                <div class="tool-description">
-                    Collez votre code HTML complet (avec les balises &lt;style&gt; et &lt;script&gt;) et obtenez les trois parties séparées.
-                </div>
-                <textarea class="code-input" id="fullCode" placeholder="Collez votre code HTML complet ici..."></textarea>
-                <button class="action-btn" onclick="separateCode()">🚀 Séparer le code</button>
-            </div>
-
-            <div class="output-group" id="separatedOutput" style="display: none;">
-                <div class="tool-title">✨ Code séparé</div>
-
-                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                    <div class="output-label">
-                        <span class="icon html"></span>
-                        HTML
-                        <button class="copy-btn" onclick="copyToClipboard('separatedHtml')">📋 Copier</button>
-                    </div>
-                    <textarea class="code-output" id="separatedHtml" readonly></textarea>
-                </div>
-
-                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                    <div class="output-label">
-                        <span class="icon css"></span>
-                        CSS
-                        <button class="copy-btn" onclick="copyToClipboard('separatedCss')">📋 Copier</button>
-                    </div>
-                    <textarea class="code-output" id="separatedCss" readonly></textarea>
-                </div>
-
-                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                    <div class="output-label">
-                        <span class="icon js"></span>
-                        JavaScript
-                        <button class="copy-btn" onclick="copyToClipboard('separatedJs')">📋 Copier</button>
-                    </div>
-                    <textarea class="code-output" id="separatedJs" readonly></textarea>
-                </div>
-
-                <button class="action-btn" onclick="sendToEditor()">📤 Envoyer vers l'éditeur</button>
-            </div>
-        </div>
-
-        <!-- Onglet Regrouper le code -->
-        <div class="merger-container tab-content" id="tab-merger">
-            <div class="tool-section">
-                <div class="tool-title">🔗 Regrouper les codes en un seul fichier HTML</div>
-                <div class="tool-description">
-                    Entrez vos codes HTML, CSS et JavaScript séparés et obtenez un fichier HTML complet.
-                </div>
-
-                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                    <div class="output-label">
-                        <span class="icon html"></span>
-                        HTML
-                    </div>
-                    <textarea class="code-input" id="mergeHtml" placeholder="Votre code HTML..."></textarea>
-                </div>
-
-                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                    <div class="output-label">
-                        <span class="icon css"></span>
-                        CSS
-                    </div>
-                    <textarea class="code-input" id="mergeCss" placeholder="Votre code CSS..."></textarea>
-                </div>
-
-                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                    <div class="output-label">
-                        <span class="icon js"></span>
-                        JavaScript
-                    </div>
-                    <textarea class="code-input" id="mergeJs" placeholder="Votre code JavaScript..."></textarea>
-                </div>
-
-                <button class="action-btn" onclick="mergeCode()">🚀 Regrouper le code</button>
-                <button class="action-btn" style="background: linear-gradient(135deg, #43e97b, #38f9d7);" onclick="importFromEditor()">📥 Importer depuis l'éditeur</button>
-            </div>
-
-            <div class="output-group" id="mergedOutput" style="display: none;">
-                <div class="tool-title">✨ Fichier HTML complet</div>
-                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                    <div class="output-label">
-                        Résultat
-                        <button class="copy-btn" onclick="copyToClipboard('mergedCode')">📋 Copier</button>
-                        <button class="copy-btn" onclick="downloadFile()">💾 Télécharger</button>
-                    </div>
-                    <textarea class="code-output" id="mergedCode" readonly style="min-height: 400px;"></textarea>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Détection du mode sombre/clair
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.body.classList.remove('light-mode');
-        } else {
-            document.body.classList.add('light-mode');
-        }
-
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-            if (event.matches) {
-                document.body.classList.remove('light-mode');
-            } else {
-                document.body.classList.add('light-mode');
-            }
-        });
-
-        let updateTimeout;
-
-        function updatePreview() {
-            clearTimeout(updateTimeout);
-            updateTimeout = setTimeout(() => {
-                const htmlCode = document.getElementById('htmlCode').value;
-                const cssCode = document.getElementById('cssCode').value;
-                const jsCode = document.getElementById('jsCode').value;
-
-                const preview = document.getElementById('preview');
-                const previewDocument = preview.contentDocument || preview.contentWindow.document;
-
-                const content = `
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <style>${cssCode}</style>
-                    </head>
-                    <body>
-                        ${htmlCode}
-                        <script>
-                            try {
-                                ${jsCode}
-                            } catch (error) {
-                                console.error('Erreur JavaScript:', error);
-                            }
-                        <\/script>
-                    </body>
-                    </html>
-                `;
-
-                previewDocument.open();
-                previewDocument.write(content);
-                previewDocument.close();
-            }, 300);
-        }
-
-        function toggleTheme() {
-            document.body.classList.toggle('light-mode');
-        }
-
-        function clearAll() {
-            document.getElementById('htmlCode').value = '';
-            document.getElementById('cssCode').value = '';
-            document.getElementById('jsCode').value = '';
-            updatePreview();
-        }
-
-        // Gestion des onglets
-        function switchTab(tabName) {
-            // Masquer tous les contenus
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            document.getElementById('tab-editor').style.display = 'none';
-
-            // Désactiver tous les onglets
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-
-            // Activer l'onglet sélectionné
-            event.target.classList.add('active');
-
-            // Afficher le contenu correspondant
-            if (tabName === 'editor') {
-                document.getElementById('tab-editor').style.display = 'flex';
-            } else if (tabName === 'separator') {
-                document.getElementById('tab-separator').classList.add('active');
-            } else if (tabName === 'merger') {
-                document.getElementById('tab-merger').classList.add('active');
-            }
-        }
-
-        // Fonction pour séparer le code
-        function separateCode() {
-            const fullCode = document.getElementById('fullCode').value;
-
-            if (!fullCode.trim()) {
-                showNotification('⚠️ Veuillez entrer du code à séparer');
-                return;
-            }
-
-            // Extraire le CSS
-            const styleRegex = /<style[^>]*>([\s\S]*?)<\/style>/gi;
-            let css = '';
-            let match;
-            while ((match = styleRegex.exec(fullCode)) !== null) {
-                css += match[1] + '\n';
-            }
-
-            // Extraire le JavaScript
-            const scriptRegex = /<script[^>]*>([\s\S]*?)<\/script>/gi;
-            let js = '';
-            while ((match = scriptRegex.exec(fullCode)) !== null) {
-                // Ne pas inclure les scripts avec src
-                if (!match[0].includes('src=')) {
-                    js += match[1] + '\n';
-                }
-            }
-
-            // Extraire le HTML (en retirant les balises style et script)
-            let html = fullCode
-                .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-                .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-                .replace(/<!DOCTYPE html>/gi, '')
-                .replace(/<html[^>]*>/gi, '')
-                .replace(/<\/html>/gi, '')
-                .replace(/<head[^>]*>[\s\S]*?<\/head>/gi, '')
-                .replace(/<body[^>]*>/gi, '')
-                .replace(/<\/body>/gi, '')
-                .trim();
-
-            // Afficher les résultats
-            document.getElementById('separatedHtml').value = html;
-            document.getElementById('separatedCss').value = css.trim();
-            document.getElementById('separatedJs').value = js.trim();
-            document.getElementById('separatedOutput').style.display = 'flex';
-
-            showNotification('✅ Code séparé avec succès !');
-        }
-
-        // Fonction pour regrouper le code
-        function mergeCode() {
-            const html = document.getElementById('mergeHtml').value;
-            const css = document.getElementById('mergeCss').value;
-            const js = document.getElementById('mergeJs').value;
-
-            if (!html && !css && !js) {
-                showNotification('⚠️ Veuillez entrer au moins un type de code');
-                return;
-            }
-
-            let merged = '<!DOCTYPE html>\n<html lang="fr">\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>Document</title>';
-
-            if (css) {
-                merged += '\n    <style>\n' + css + '\n    </style>';
-            }
-
-            merged += '\n</head>\n<body>\n' + html;
-
-            if (js) {
-                merged += '\n    <script>\n' + js + '\n    <\/script>';
-            }
-
-            merged += '\n</body>\n</html>';
-
-            document.getElementById('mergedCode').value = merged;
-            document.getElementById('mergedOutput').style.display = 'flex';
-
-            showNotification('✅ Code regroupé avec succès !');
-        }
-
-        // Envoyer le code séparé vers l'éditeur
-        function sendToEditor() {
-            document.getElementById('htmlCode').value = document.getElementById('separatedHtml').value;
-            document.getElementById('cssCode').value = document.getElementById('separatedCss').value;
-            document.getElementById('jsCode').value = document.getElementById('separatedJs').value;
-            updatePreview();
-            switchTab('editor');
-            document.querySelector('.tab').click();
-            showNotification('✅ Code envoyé vers l\'éditeur !');
-        }
-
-        // Importer depuis l'éditeur
-        function importFromEditor() {
-            document.getElementById('mergeHtml').value = document.getElementById('htmlCode').value;
-            document.getElementById('mergeCss').value = document.getElementById('cssCode').value;
-            document.getElementById('mergeJs').value = document.getElementById('jsCode').value;
-            showNotification('✅ Code importé depuis l\'éditeur !');
-        }
-
-        // Copier dans le presse-papier
-        function copyToClipboard(elementId) {
-            const element = document.getElementById(elementId);
-            element.select();
-            document.execCommand('copy');
-            showNotification('📋 Code copié dans le presse-papier !');
-        }
-
-        // Télécharger le fichier
-        function downloadFile() {
-            const code = document.getElementById('mergedCode').value;
-            const blob = new Blob([code], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'index.html';
-            a.click();
-            URL.revokeObjectURL(url);
-            showNotification('💾 Fichier téléchargé !');
-        }
-
-        // Afficher une notification
-        function showNotification(message) {
-            const notification = document.createElement('div');
-            notification.textContent = message;
-            notification.style.cssText = `
-                position: fixed;
-                top: 100px;
-                right: 20px;
-                background: linear-gradient(135deg, var(--accent-css), var(--accent-html));
-                color: white;
-                padding: 1rem 1.5rem;
-                border-radius: 8px;
-                font-family: 'Ubuntu', sans-serif;
-                font-weight: 600;
-                box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-                z-index: 10000;
-                animation: slideIn 0.3s ease-out;
-            `;
-            document.body.appendChild(notification);
-
-            setTimeout(() => {
-                notification.style.animation = 'slideOut 0.3s ease-out';
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
-        }
-
-        // Charge un exemple au démarrage
-        window.addEventListener('load', () => {
-            document.getElementById('htmlCode').value = `<div class="demo-container">
-  <h1>Bienvenue dans l'éditeur de code en direct !</h1>
-  <p>Modifiez le code HTML, CSS ou JavaScript pour voir les changements en temps réel.</p>
-  <button onclick="changeColor()">Changer la couleur</button>
-</div>`;
-
-            document.getElementById('cssCode').value = `body {
-  font-family: Arial, sans-serif;
-  padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
-}
-
-.demo-container {
-  background: white;
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-  text-align: center;
-}
-
-h1 {
-  color: #667eea;
-  margin-bottom: 15px;
-}
-
-p {
-  color: #555;
-  margin-bottom: 20px;
-}
-
-button {
-  background-color: #667eea;
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 16px;
-  transition: transform 0.2s;
-}
-
-button:hover {
-  transform: scale(1.05);
-}`;
-
-            document.getElementById('jsCode').value = `function changeColor() {
-  const colors = ['#667eea', '#f093fb', '#4facfe', '#43e97b', '#fa709a'];
-  const randomColor = colors[Math.floor(Math.random() * colors.length)];
-
-  const title = document.querySelector('h1');
-  title.style.color = randomColor;
-
-  const button = document.querySelector('button');
-  button.style.backgroundColor = randomColor;
-}`;
-
-            updatePreview();
-        });
-    </script>
-</body>
-</html>
++   1 <!DOCTYPE html>
++   2 <html lang="fr">
++   3 <head>
++   4     <meta charset="UTF-8">
++   5     <meta name="viewport" content="width=device-width, initial-scale=1.0">
++   6     <title>CCCam Server Checker</title>
++   7     <link rel="preconnect" href="https://fonts.googleapis.com">
++   8     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
++   9     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
++  10     <style>
++  11         * {
++  12             margin: 0;
++  13             padding: 0;
++  14             box-sizing: border-box;
++  15         }
++  16 
++  17         :root {
++  18             --bg-dark: #0a0e27;
++  19             --bg-card: #141b3a;
++  20             --bg-input: #1a2344;
++  21             --border-color: #2d3a6b;
++  22             --text-primary: #e8eaf6;
++  23             --text-secondary: #9fa8da;
++  24             --accent-primary: #00d9ff;
++  25             --accent-secondary: #7c4dff;
++  26             --success: #00ff88;
++  27             --error: #ff1744;
++  28             --warning: #ffc400;
++  29         }
++  30 
++  31         body {
++  32             font-family: 'Rajdhani', sans-serif;
++  33             background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1428 100%);
++  34             color: var(--text-primary);
++  35             min-height: 100vh;
++  36             overflow-x: hidden;
++  37             position: relative;
++  38         }
++  39 
++  40         body::before {
++  41             content: '';
++  42             position: fixed;
++  43             top: 0;
++  44             left: 0;
++  45             right: 0;
++  46             bottom: 0;
++  47             background: 
++  48                 radial-gradient(circle at 20% 50%, rgba(124, 77, 255, 0.1) 0%, transparent 50%),
++  49                 radial-gradient(circle at 80% 80%, rgba(0, 217, 255, 0.1) 0%, transparent 50%);
++  50             pointer-events: none;
++  51             z-index: 0;
++  52         }
++  53 
++  54         .container {
++  55             max-width: 1200px;
++  56             margin: 0 auto;
++  57             padding: 2rem;
++  58             position: relative;
++  59             z-index: 1;
++  60         }
++  61 
++  62         .header {
++  63             text-align: center;
++  64             margin-bottom: 3rem;
++  65             animation: fadeInDown 0.8s ease-out;
++  66         }
++  67 
++  68         .logo {
++  69             font-family: 'Orbitron', sans-serif;
++  70             font-size: 3rem;
++  71             font-weight: 900;
++  72             background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
++  73             -webkit-background-clip: text;
++  74             -webkit-text-fill-color: transparent;
++  75             background-clip: text;
++  76             margin-bottom: 0.5rem;
++  77             text-shadow: 0 0 30px rgba(0, 217, 255, 0.3);
++  78             letter-spacing: 2px;
++  79         }
++  80 
++  81         .subtitle {
++  82             font-size: 1.2rem;
++  83             color: var(--text-secondary);
++  84             font-weight: 500;
++  85         }
++  86 
++  87         .main-grid {
++  88             display: grid;
++  89             grid-template-columns: 1fr 1fr;
++  90             gap: 2rem;
++  91             animation: fadeIn 1s ease-out;
++  92         }
++  93 
++  94         .card {
++  95             background: var(--bg-card);
++  96             border: 2px solid var(--border-color);
++  97             border-radius: 16px;
++  98             padding: 2rem;
++  99             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
++ 100             transition: all 0.3s ease;
++ 101             position: relative;
++ 102             overflow: hidden;
++ 103         }
++ 104 
++ 105         .card::before {
++ 106             content: '';
++ 107             position: absolute;
++ 108             top: 0;
++ 109             left: 0;
++ 110             right: 0;
++ 111             height: 4px;
++ 112             background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
++ 113         }
++ 114 
++ 115         .card:hover {
++ 116             transform: translateY(-5px);
++ 117             box-shadow: 0 12px 48px rgba(0, 217, 255, 0.2);
++ 118             border-color: var(--accent-primary);
++ 119         }
++ 120 
++ 121         .card-title {
++ 122             font-family: 'Orbitron', sans-serif;
++ 123             font-size: 1.5rem;
++ 124             font-weight: 700;
++ 125             margin-bottom: 1.5rem;
++ 126             color: var(--accent-primary);
++ 127             display: flex;
++ 128             align-items: center;
++ 129             gap: 0.5rem;
++ 130         }
++ 131 
++ 132         .form-group {
++ 133             margin-bottom: 1.5rem;
++ 134         }
++ 135 
++ 136         .form-label {
++ 137             display: block;
++ 138             font-size: 0.95rem;
++ 139             font-weight: 600;
++ 140             color: var(--text-secondary);
++ 141             margin-bottom: 0.5rem;
++ 142             text-transform: uppercase;
++ 143             letter-spacing: 1px;
++ 144         }
++ 145 
++ 146         .form-input {
++ 147             width: 100%;
++ 148             padding: 0.875rem 1rem;
++ 149             background: var(--bg-input);
++ 150             border: 2px solid var(--border-color);
++ 151             border-radius: 8px;
++ 152             color: var(--text-primary);
++ 153             font-family: 'Space Mono', monospace;
++ 154             font-size: 16px;
++ 155             transition: all 0.3s ease;
++ 156         }
++ 157 
++ 158         .form-input:focus {
++ 159             outline: none;
++ 160             border-color: var(--accent-primary);
++ 161             box-shadow: 0 0 0 3px rgba(0, 217, 255, 0.1);
++ 162         }
++ 163 
++ 164         .form-input::placeholder {
++ 165             color: var(--text-secondary);
++ 166             opacity: 0.5;
++ 167         }
++ 168 
++ 169         .input-row {
++ 170             display: grid;
++ 171             grid-template-columns: 3fr 1fr;
++ 172             gap: 1rem;
++ 173         }
++ 174 
++ 175         .btn {
++ 176             padding: 1rem 2rem;
++ 177             border: none;
++ 178             border-radius: 8px;
++ 179             font-family: 'Rajdhani', sans-serif;
++ 180             font-size: 1.1rem;
++ 181             font-weight: 700;
++ 182             cursor: pointer;
++ 183             transition: all 0.3s ease;
++ 184             text-transform: uppercase;
++ 185             letter-spacing: 1px;
++ 186             position: relative;
++ 187             overflow: hidden;
++ 188         }
++ 189 
++ 190         .btn::before {
++ 191             content: '';
++ 192             position: absolute;
++ 193             top: 50%;
++ 194             left: 50%;
++ 195             width: 0;
++ 196             height: 0;
++ 197             border-radius: 50%;
++ 198             background: rgba(255, 255, 255, 0.2);
++ 199             transform: translate(-50%, -50%);
++ 200             transition: width 0.6s, height 0.6s;
++ 201         }
++ 202 
++ 203         .btn:hover::before {
++ 204             width: 300px;
++ 205             height: 300px;
++ 206         }
++ 207 
++ 208         .btn-primary {
++ 209             background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
++ 210             color: white;
++ 211             width: 100%;
++ 212             margin-top: 1rem;
++ 213         }
++ 214 
++ 215         .btn-primary:hover {
++ 216             transform: translateY(-2px);
++ 217             box-shadow: 0 8px 24px rgba(0, 217, 255, 0.4);
++ 218         }
++ 219 
++ 220         .btn-clear {
++ 221             background: var(--bg-input);
++ 222             color: var(--text-secondary);
++ 223             border: 2px solid var(--border-color);
++ 224             padding: 0.75rem 1.5rem;
++ 225             font-size: 0.95rem;
++ 226             margin-top: 1rem;
++ 227         }
++ 228 
++ 229         .btn-clear:hover {
++ 230             background: var(--error);
++ 231             color: white;
++ 232             border-color: var(--error);
++ 233         }
++ 234 
++ 235         .servers-list {
++ 236             max-height: 600px;
++ 237             overflow-y: auto;
++ 238             padding-right: 0.5rem;
++ 239         }
++ 240 
++ 241         .servers-list::-webkit-scrollbar {
++ 242             width: 8px;
++ 243         }
++ 244 
++ 245         .servers-list::-webkit-scrollbar-track {
++ 246             background: var(--bg-input);
++ 247             border-radius: 4px;
++ 248         }
++ 249 
++ 250         .servers-list::-webkit-scrollbar-thumb {
++ 251             background: var(--border-color);
++ 252             border-radius: 4px;
++ 253         }
++ 254 
++ 255         .servers-list::-webkit-scrollbar-thumb:hover {
++ 256             background: var(--accent-primary);
++ 257         }
++ 258 
++ 259         .server-item {
++ 260             background: var(--bg-input);
++ 261             border: 2px solid var(--border-color);
++ 262             border-radius: 12px;
++ 263             padding: 1.25rem;
++ 264             margin-bottom: 1rem;
++ 265             transition: all 0.3s ease;
++ 266             animation: slideInRight 0.5s ease-out;
++ 267         }
++ 268 
++ 269         .server-item:hover {
++ 270             border-color: var(--accent-primary);
++ 271             transform: translateX(5px);
++ 272         }
++ 273 
++ 274         .server-header {
++ 275             display: flex;
++ 276             justify-content: space-between;
++ 277             align-items: center;
++ 278             margin-bottom: 0.75rem;
++ 279         }
++ 280 
++ 281         .server-host {
++ 282             font-family: 'Space Mono', monospace;
++ 283             font-size: 1.1rem;
++ 284             font-weight: 700;
++ 285             color: var(--text-primary);
++ 286         }
++ 287 
++ 288         .server-status {
++ 289             display: flex;
++ 290             align-items: center;
++ 291             gap: 0.5rem;
++ 292             font-weight: 700;
++ 293             font-size: 0.95rem;
++ 294             text-transform: uppercase;
++ 295             letter-spacing: 1px;
++ 296         }
++ 297 
++ 298         .status-dot {
++ 299             width: 12px;
++ 300             height: 12px;
++ 301             border-radius: 50%;
++ 302             animation: pulse 2s infinite;
++ 303         }
++ 304 
++ 305         .status-online {
++ 306             color: var(--success);
++ 307         }
++ 308 
++ 309         .status-online .status-dot {
++ 310             background: var(--success);
++ 311             box-shadow: 0 0 12px var(--success);
++ 312         }
++ 313 
++ 314         .status-offline {
++ 315             color: var(--error);
++ 316         }
++ 317 
++ 318         .status-offline .status-dot {
++ 319             background: var(--error);
++ 320             box-shadow: 0 0 12px var(--error);
++ 321         }
++ 322 
++ 323         .status-testing {
++ 324             color: var(--warning);
++ 325         }
++ 326 
++ 327         .status-testing .status-dot {
++ 328             background: var(--warning);
++ 329             box-shadow: 0 0 12px var(--warning);
++ 330         }
++ 331 
++ 332         .server-details {
++ 333             display: grid;
++ 334             grid-template-columns: repeat(2, 1fr);
++ 335             gap: 0.5rem;
++ 336             font-size: 0.9rem;
++ 337             color: var(--text-secondary);
++ 338             font-family: 'Space Mono', monospace;
++ 339         }
++ 340 
++ 341         .server-detail {
++ 342             display: flex;
++ 343             align-items: center;
++ 344             gap: 0.5rem;
++ 345         }
++ 346 
++ 347         .server-actions {
++ 348             margin-top: 1rem;
++ 349             display: flex;
++ 350             gap: 0.5rem;
++ 351         }
++ 352 
++ 353         .btn-test {
++ 354             background: var(--bg-card);
++ 355             color: var(--accent-primary);
++ 356             border: 1px solid var(--accent-primary);
++ 357             padding: 0.5rem 1rem;
++ 358             font-size: 0.85rem;
++ 359             flex: 1;
++ 360         }
++ 361 
++ 362         .btn-test:hover {
++ 363             background: var(--accent-primary);
++ 364             color: var(--bg-card);
++ 365         }
++ 366 
++ 367         .btn-delete {
++ 368             background: var(--bg-card);
++ 369             color: var(--error);
++ 370             border: 1px solid var(--error);
++ 371             padding: 0.5rem 1rem;
++ 372             font-size: 0.85rem;
++ 373         }
++ 374 
++ 375         .btn-delete:hover {
++ 376             background: var(--error);
++ 377             color: white;
++ 378         }
++ 379 
++ 380         .empty-state {
++ 381             text-align: center;
++ 382             padding: 3rem 1rem;
++ 383             color: var(--text-secondary);
++ 384         }
++ 385 
++ 386         .empty-state-icon {
++ 387             font-size: 4rem;
++ 388             margin-bottom: 1rem;
++ 389             opacity: 0.3;
++ 390         }
++ 391 
++ 392         .stats-grid {
++ 393             display: grid;
++ 394             grid-template-columns: repeat(3, 1fr);
++ 395             gap: 1rem;
++ 396             margin-bottom: 2rem;
++ 397         }
++ 398 
++ 399         .stat-card {
++ 400             background: var(--bg-input);
++ 401             border: 2px solid var(--border-color);
++ 402             border-radius: 12px;
++ 403             padding: 1.5rem;
++ 404             text-align: center;
++ 405             transition: all 0.3s ease;
++ 406         }
++ 407 
++ 408         .stat-card:hover {
++ 409             border-color: var(--accent-primary);
++ 410             transform: scale(1.05);
++ 411         }
++ 412 
++ 413         .stat-value {
++ 414             font-family: 'Orbitron', sans-serif;
++ 415             font-size: 2.5rem;
++ 416             font-weight: 900;
++ 417             margin-bottom: 0.5rem;
++ 418         }
++ 419 
++ 420         .stat-label {
++ 421             font-size: 0.85rem;
++ 422             color: var(--text-secondary);
++ 423             text-transform: uppercase;
++ 424             letter-spacing: 1px;
++ 425         }
++ 426 
++ 427         @keyframes fadeIn {
++ 428             from {
++ 429                 opacity: 0;
++ 430                 transform: translateY(20px);
++ 431             }
++ 432             to {
++ 433                 opacity: 1;
++ 434                 transform: translateY(0);
++ 435             }
++ 436         }
++ 437 
++ 438         @keyframes fadeInDown {
++ 439             from {
++ 440                 opacity: 0;
++ 441                 transform: translateY(-30px);
++ 442             }
++ 443             to {
++ 444                 opacity: 1;
++ 445                 transform: translateY(0);
++ 446             }
++ 447         }
++ 448 
++ 449         @keyframes slideInRight {
++ 450             from {
++ 451                 opacity: 0;
++ 452                 transform: translateX(-20px);
++ 453             }
++ 454             to {
++ 455                 opacity: 1;
++ 456                 transform: translateX(0);
++ 457             }
++ 458         }
++ 459 
++ 460         @keyframes pulse {
++ 461             0%, 100% {
++ 462                 opacity: 1;
++ 463             }
++ 464             50% {
++ 465                 opacity: 0.5;
++ 466             }
++ 467         }
++ 468 
++ 469         @media (max-width: 968px) {
++ 470             .main-grid {
++ 471                 grid-template-columns: 1fr;
++ 472             }
++ 473 
++ 474             .stats-grid {
++ 475                 grid-template-columns: 1fr;
++ 476             }
++ 477 
++ 478             .logo {
++ 479                 font-size: 2rem;
++ 480             }
++ 481         }
++ 482     </style>
++ 483 </head>
++ 484 <body>
++ 485     <div class="container">
++ 486         <div class="header">
++ 487             <h1 class="logo">⚡ CCCam Checker</h1>
++ 488             <p class="subtitle">Vérificateur d'état des serveurs CCCam en temps réel</p>
++ 489         </div>
++ 490 
++ 491         <div class="main-grid">
++ 492             <div class="card">
++ 493                 <h2 class="card-title">
++ 494                     ➕ Ajouter un serveur
++ 495                 </h2>
++ 496 
++ 497                 <form id="serverForm">
++ 498                     <div class="form-group">
++ 499                         <label class="form-label">Hôte / IP</label>
++ 500                         <input type="text" class="form-input" id="host" placeholder="exemple.com" required>
++ 501                     </div>
++ 502 
++ 503                     <div class="form-group">
++ 504                         <label class="form-label">Port</label>
++ 505                         <input type="number" class="form-input" id="port" placeholder="12000" value="12000" required>
++ 506                     </div>
++ 507 
++ 508                     <div class="form-group">
++ 509                         <label class="form-label">Nom d'utilisateur</label>
++ 510                         <input type="text" class="form-input" id="username" placeholder="user123" required>
++ 511                     </div>
++ 512 
++ 513                     <div class="form-group">
++ 514                         <label class="form-label">Mot de passe</label>
++ 515                         <input type="password" class="form-input" id="password" placeholder="********" required>
++ 516                     </div>
++ 517 
++ 518                     <button type="submit" class="btn btn-primary">
++ 519                         <span style="position: relative; z-index: 1;">🚀 Ajouter et tester</span>
++ 520                     </button>
++ 521 
++ 522                     <button type="button" class="btn btn-clear" onclick="clearForm()">
++ 523                         <span style="position: relative; z-index: 1;">🗑️ Effacer</span>
++ 524                     </button>
++ 525                 </form>
++ 526             </div>
++ 527 
++ 528             <div class="card">
++ 529                 <h2 class="card-title">
++ 530                     📡 Serveurs surveillés
++ 531                 </h2>
++ 532 
++ 533                 <div class="stats-grid">
++ 534                     <div class="stat-card">
++ 535                         <div class="stat-value" style="color: var(--text-primary);" id="totalServers">0</div>
++ 536                         <div class="stat-label">Total</div>
++ 537                     </div>
++ 538                     <div class="stat-card">
++ 539                         <div class="stat-value" style="color: var(--success);" id="onlineServers">0</div>
++ 540                         <div class="stat-label">En ligne</div>
++ 541                     </div>
++ 542                     <div class="stat-card">
++ 543                         <div class="stat-value" style="color: var(--error);" id="offlineServers">0</div>
++ 544                         <div class="stat-label">Hors ligne</div>
++ 545                     </div>
++ 546                 </div>
++ 547 
++ 548                 <div class="servers-list" id="serversList">
++ 549                     <div class="empty-state">
++ 550                         <div class="empty-state-icon">📡</div>
++ 551                         <p>Aucun serveur ajouté</p>
++ 552                         <p style="font-size: 0.9rem; margin-top: 0.5rem;">Ajoutez votre premier serveur CCCam</p>
++ 553                     </div>
++ 554                 </div>
++ 555             </div>
++ 556         </div>
++ 557     </div>
++ 558 
++ 559     <script>
++ 560         let servers = [];
++ 561 
++ 562         // Ajouter un serveur
++ 563         document.getElementById('serverForm').addEventListener('submit', async function(e) {
++ 564             e.preventDefault();
++ 565 
++ 566             const server = {
++ 567                 id: Date.now(),
++ 568                 host: document.getElementById('host').value,
++ 569                 port: document.getElementById('port').value,
++ 570                 username: document.getElementById('username').value,
++ 571                 password: document.getElementById('password').value,
++ 572                 status: 'testing',
++ 573                 lastCheck: new Date()
++ 574             };
++ 575 
++ 576             servers.push(server);
++ 577             renderServers();
++ 578             clearForm();
++ 579 
++ 580             // Simuler le test de connexion
++ 581             setTimeout(() => {
++ 582                 testServer(server.id);
++ 583             }, 1500);
++ 584         });
++ 585 
++ 586         // Tester un serveur
++ 587         async function testServer(serverId) {
++ 588             const server = servers.find(s => s.id === serverId);
++ 589             if (!server) return;
++ 590 
++ 591             server.status = 'testing';
++ 592             renderServers();
++ 593 
++ 594             // Simulation du test de connexion
++ 595             // Dans un environnement réel, vous auriez besoin d'un backend pour tester la connexion CCCam
++ 596             try {
++ 597                 // Simuler un délai de test
++ 598                 await new Promise(resolve => setTimeout(resolve, 2000));
++ 599 
++ 600                 // Simuler un résultat aléatoire (70% de chance d'être en ligne)
++ 601                 // Pour un vrai test, vous devriez faire une requête à un backend
++ 602                 const isOnline = Math.random() > 0.3;
++ 603 
++ 604                 server.status = isOnline ? 'online' : 'offline';
++ 605                 server.lastCheck = new Date();
++ 606                 
++ 607                 showNotification(
++ 608                     isOnline ? 
++ 609                     `✅ Serveur ${server.host} est en ligne` : 
++ 610                     `❌ Serveur ${server.host} est hors ligne`,
++ 611                     isOnline ? 'success' : 'error'
++ 612                 );
++ 613             } catch (error) {
++ 614                 server.status = 'offline';
++ 615                 showNotification(`❌ Erreur lors du test de ${server.host}`, 'error');
++ 616             }
++ 617 
++ 618             renderServers();
++ 619         }
++ 620 
++ 621         // Supprimer un serveur
++ 622         function deleteServer(serverId) {
++ 623             servers = servers.filter(s => s.id !== serverId);
++ 624             renderServers();
++ 625             showNotification('🗑️ Serveur supprimé', 'info');
++ 626         }
++ 627 
++ 628         // Afficher les serveurs
++ 629         function renderServers() {
++ 630             const serversList = document.getElementById('serversList');
++ 631 
++ 632             if (servers.length === 0) {
++ 633                 serversList.innerHTML = `
++ 634                     <div class="empty-state">
++ 635                         <div class="empty-state-icon">📡</div>
++ 636                         <p>Aucun serveur ajouté</p>
++ 637                         <p style="font-size: 0.9rem; margin-top: 0.5rem;">Ajoutez votre premier serveur CCCam</p>
++ 638                     </div>
++ 639                 `;
++ 640                 updateStats();
++ 641                 return;
++ 642             }
++ 643 
++ 644             serversList.innerHTML = servers.map(server => {
++ 645                 const statusClass = server.status === 'online' ? 'status-online' : 
++ 646                                    server.status === 'offline' ? 'status-offline' : 'status-testing';
++ 647                 const statusText = server.status === 'online' ? 'En ligne' : 
++ 648                                   server.status === 'offline' ? 'Hors ligne' : 'Test...';
++ 649                 const statusIcon = server.status === 'online' ? '✓' : 
++ 650                                   server.status === 'offline' ? '✗' : '⟳';
++ 651 
++ 652                 return `
++ 653                     <div class="server-item">
++ 654                         <div class="server-header">
++ 655                             <div class="server-host">${server.host}:${server.port}</div>
++ 656                             <div class="server-status ${statusClass}">
++ 657                                 <span class="status-dot"></span>
++ 658                                 ${statusIcon} ${statusText}
++ 659                             </div>
++ 660                         </div>
++ 661                         <div class="server-details">
++ 662                             <div class="server-detail">
++ 663                                 <span>👤</span>
++ 664                                 <span>${server.username}</span>
++ 665                             </div>
++ 666                             <div class="server-detail">
++ 667                                 <span>🔐</span>
++ 668                                 <span>${'•'.repeat(server.password.length)}</span>
++ 669                             </div>
++ 670                             <div class="server-detail" style="grid-column: 1 / -1;">
++ 671                                 <span>🕒</span>
++ 672                                 <span>Dernière vérif: ${formatTime(server.lastCheck)}</span>
++ 673                             </div>
++ 674                         </div>
++ 675                         <div class="server-actions">
++ 676                             <button class="btn btn-test" onclick="testServer(${server.id})">
++ 677                                 <span style="position: relative; z-index: 1;">🔄 Retester</span>
++ 678                             </button>
++ 679                             <button class="btn btn-delete" onclick="deleteServer(${server.id})">
++ 680                                 <span style="position: relative; z-index: 1;">🗑️ Supprimer</span>
++ 681                             </button>
++ 682                         </div>
++ 683                     </div>
++ 684                 `;
++ 685             }).join('');
++ 686 
++ 687             updateStats();
++ 688         }
++ 689 
++ 690         // Mettre à jour les statistiques
++ 691         function updateStats() {
++ 692             const total = servers.length;
++ 693             const online = servers.filter(s => s.status === 'online').length;
++ 694             const offline = servers.filter(s => s.status === 'offline').length;
++ 695 
++ 696             document.getElementById('totalServers').textContent = total;
++ 697             document.getElementById('onlineServers').textContent = online;
++ 698             document.getElementById('offlineServers').textContent = offline;
++ 699         }
++ 700 
++ 701         // Formater le temps
++ 702         function formatTime(date) {
++ 703             const now = new Date();
++ 704             const diff = Math.floor((now - date) / 1000);
++ 705 
++ 706             if (diff < 60) return `il y a ${diff}s`;
++ 707             if (diff < 3600) return `il y a ${Math.floor(diff / 60)}min`;
++ 708             if (diff < 86400) return `il y a ${Math.floor(diff / 3600)}h`;
++ 709             return date.toLocaleString('fr-FR', { 
++ 710                 day: '2-digit', 
++ 711                 month: '2-digit', 
++ 712                 hour: '2-digit', 
++ 713                 minute: '2-digit' 
++ 714             });
++ 715         }
++ 716 
++ 717         // Effacer le formulaire
++ 718         function clearForm() {
++ 719             document.getElementById('serverForm').reset();
++ 720             document.getElementById('port').value = '12000';
++ 721         }
++ 722 
++ 723         // Afficher une notification
++ 724         function showNotification(message, type = 'info') {
++ 725             const colors = {
++ 726                 success: 'var(--success)',
++ 727                 error: 'var(--error)',
++ 728                 info: 'var(--accent-primary)'
++ 729             };
++ 730 
++ 731             const notification = document.createElement('div');
++ 732             notification.textContent = message;
++ 733             notification.style.cssText = `
++ 734                 position: fixed;
++ 735                 top: 2rem;
++ 736                 right: 2rem;
++ 737                 background: ${colors[type]};
++ 738                 color: var(--bg-dark);
++ 739                 padding: 1rem 1.5rem;
++ 740                 border-radius: 8px;
++ 741                 font-family: 'Rajdhani', sans-serif;
++ 742                 font-weight: 700;
++ 743                 font-size: 1rem;
++ 744                 box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
++ 745                 z-index: 10000;
++ 746                 animation: slideInRight 0.3s ease-out;
++ 747             `;
++ 748             document.body.appendChild(notification);
++ 749 
++ 750             setTimeout(() => {
++ 751                 notification.style.animation = 'fadeOut 0.3s ease-out';
++ 752                 setTimeout(() => notification.remove(), 300);
++ 753             }, 3000);
++ 754         }
++ 755 
++ 756         // Auto-refresh toutes les 5 minutes
++ 757         setInterval(() => {
++ 758             servers.forEach(server => {
++ 759                 if (server.status !== 'testing') {
++ 760                     testServer(server.id);
++ 761                 }
++ 762             });
++ 763         }, 300000);
++ 764     </script>
++ 765 </body>
++ 766 </html>
