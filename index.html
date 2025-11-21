@@ -1,3 +1,68 @@
+<?php
+/**
+ * ====================================================================
+ * LOGIQUE PHP POUR LE TEST DE SERVEUR (BACK-END)
+ * ====================================================================
+ * Ce bloc PHP intercepte la requête AJAX POST envoyée par le JavaScript
+ * pour effectuer le test de connectivité réel du serveur CCcam.
+ */
+
+// --- Fonction de Test Réel du Serveur ---
+function check_cccam_status($host, $port, $timeout = 2) {
+    // Nettoyage de l'hôte
+    $host = trim($host, '[]');
+    $host = preg_replace('/^(\w+:\/\/)/', '', $host); 
+    
+    // Tente d'ouvrir une socket
+    // Le @ masque les avertissements/erreurs PHP si la connexion échoue
+    $fp = @fsockopen($host, $port, $errno, $errstr, $timeout);
+    
+    if ($fp) {
+        fclose($fp);
+        return true; // Connexion réussie
+    }
+    return false; // Échec de la connexion
+}
+
+// --- Gestion de la Requête AJAX ---
+if (isset($_POST['action']) && $_POST['action'] === 'test_server' && isset($_POST['host']) && isset($_POST['port'])) {
+    
+    // 1. Définir l'en-tête JSON immédiatement pour éviter l'erreur '<'
+    header('Content-Type: application/json');
+    
+    // Vérification rapide de la fonction fsockopen
+    if (!function_exists('fsockopen')) {
+        echo json_encode(['status' => 'error', 'message' => 'La fonction PHP fsockopen est désactivée sur ce serveur. Le test réel est impossible.']);
+        exit;
+    }
+    
+    // Utilisation d'un bloc try/catch pour garantir une réponse JSON en cas d'erreur fatale
+    try {
+        $host = filter_var($_POST['host'], FILTER_SANITIZE_STRING);
+        $port = filter_var($_POST['port'], FILTER_SANITIZE_NUMBER_INT);
+        
+        if (empty($host) || empty($port)) {
+            echo json_encode(['status' => 'error', 'message' => 'Hôte ou Port manquant.']);
+            exit;
+        }
+        
+        // Exécution du test réel
+        $is_online = check_cccam_status($host, (int)$port);
+        
+        if ($is_online) {
+            echo json_encode(['status' => 'online', 'message' => "✅ Serveur $host:$port est en LIGNE."]);
+        } else {
+            echo json_encode(['status' => 'offline', 'message' => "❌ Serveur $host:$port est HORS LIGNE ou le port est fermé."]);
+        }
+
+    } catch (Exception $e) {
+        // Erreur PHP interne attrapée
+        echo json_encode(['status' => 'error', 'message' => 'Erreur interne du serveur PHP: ' . $e->getMessage()]);
+    }
+    exit;
+}
+// Si la requête n'est PAS un test AJAX, le script continue pour afficher le HTML.
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -144,7 +209,7 @@
             <textarea id="single-server-line" rows="2" placeholder="Entrez la ligne de serveur ici..."></textarea>
             <button id="test-single-server">Tester ce Serveur</button>
             <div id="single-server-status" class="status-message"></div>
-            <p class="note">✅ Le test de connexion utilise **PHP (back-end)** pour vérifier l'ouverture du port.</p>
+            <p class="note">✅ Le test de connexion utilise **PHP (back-end)** pour vérifier l'ouverture du port. Il nécessite un serveur PHP actif.</p>
         </section>
 
         <hr>
@@ -192,59 +257,6 @@
         <p>&copy; 2025 Testeur CCcam | Nécessite PHP</p>
     </footer>
 
-    <?php
-    /**
-     * Cette fonction PHP tente d'établir une connexion TCP/IP sur le port spécifié
-     * pour vérifier si le serveur est en ligne et accessible.
-     * @param string $host L'adresse IP ou le nom d'hôte du serveur.
-     * @param int $port Le port du serveur CCcam.
-     * @param int $timeout Le délai maximum en secondes.
-     * @return bool Vrai si la connexion est établie, faux sinon.
-     */
-    function check_cccam_status($host, $port, $timeout = 2) {
-        // Supprime les crochets d'IPv6 si présents (pour la compatibilité)
-        $host = trim($host, '[]'); 
-        
-        // Supprime les préfixes de protocole ou les espaces superflus
-        $host = preg_replace('/^(\w+:\/\/)/', '', $host); 
-        
-        // Tente d'ouvrir une socket
-        $fp = @fsockopen($host, $port, $errno, $errstr, $timeout);
-        
-        if ($fp) {
-            fclose($fp);
-            return true; // Connexion réussie
-        }
-        return false; // Échec de la connexion
-    }
-
-    // Gère la requête AJAX envoyée par le JavaScript
-    if (isset($_POST['action']) && $_POST['action'] === 'test_server' && isset($_POST['host']) && isset($_POST['port'])) {
-        // Nettoyage et validation des données d'entrée
-        $host = filter_var($_POST['host'], FILTER_SANITIZE_STRING);
-        $port = filter_var($_POST['port'], FILTER_SANITIZE_NUMBER_INT);
-        
-        if (empty($host) || empty($port)) {
-            header('Content-Type: application/json');
-            echo json_encode(['status' => 'error', 'message' => 'Hôte ou Port manquant.']);
-            exit;
-        }
-        
-        // Exécution du test réel
-        $is_online = check_cccam_status($host, (int)$port);
-        
-        header('Content-Type: application/json');
-        if ($is_online) {
-            echo json_encode(['status' => 'online', 'message' => "✅ Serveur $host:$port est en LIGNE."]);
-        } else {
-            echo json_encode(['status' => 'offline', 'message' => "❌ Serveur $host:$port est HORS LIGNE ou inaccessible."]);
-        }
-        exit;
-    }
-    // Si la requête n'est pas une requête AJAX de test, le code PHP se termine ici
-    // et le HTML est affiché normalement.
-    ?>
-
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const fileUpload = document.getElementById('file-upload');
@@ -261,7 +273,7 @@
             // --- Fonctions d'Utilité ---
 
             /**
-             * @brief Analyse une ligne CCcam de manière robuste.
+             * @brief Analyse une ligne CCcam de manière robuste (gestion des espaces, tirets, etc.).
              */
             function parseCline(line) {
                 // Supprime les espaces inutiles, assure que la ligne commence par 'C:', et remplace les espaces ou tirets multiples par un seul espace.
@@ -285,8 +297,7 @@
                     return null;
                 }
 
-                // STATUT SIMULÉ pour le tableau de masse (la vérification de masse nécessiterait
-                // une requête PHP pour chaque ligne, ce qui est très lent).
+                // STATUT SIMULÉ pour le tableau de masse.
                 const status = Math.random() < 0.7 ? 'online' : 'offline';
 
                 return { host, port, user, pass, status };
@@ -307,8 +318,15 @@
                         body: formData
                     });
 
-                    const result = await response.json();
-                    return result; // Contient {status: 'online'/'offline'/'error', message: '...'}
+                    // Tente de récupérer le JSON. Si cela échoue, c'est l'erreur que vous avez eue.
+                    const text = await response.text();
+                    try {
+                        const result = JSON.parse(text);
+                        return result; 
+                    } catch (e) {
+                        console.error("Erreur de parsing JSON:", text);
+                        return { status: 'error', message: `Erreur de communication : Réponse du serveur inattendue (voir console).` };
+                    }
                 } catch (error) {
                     console.error("Erreur de communication avec le serveur PHP:", error);
                     return { status: 'error', message: `Erreur de communication: ${error.message}` };
@@ -343,6 +361,7 @@
                     row.innerHTML = `<td colspan="4" style="text-align: center;">Aucune cline chargée.</td>`;
                     return;
                 }
+                
                 if (filteredClines.length === 0) {
                     const row = tableBody.insertRow();
                     row.innerHTML = `<td colspan="4" style="text-align: center;">Aucune cline correspondant au filtre "${filter.toUpperCase()}" n'a été trouvée.</td>`;
@@ -482,6 +501,7 @@
                     singleServerStatusDiv.className = 'status-message offline-status';
                     singleServerStatusDiv.innerHTML = `❌ **HORS LIGNE** : ${result.message}`;
                 } else {
+                    // Erreur capturée par PHP ou erreur de communication
                     singleServerStatusDiv.className = 'status-message offline-status';
                     singleServerStatusDiv.innerHTML = `⚠️ **ERREUR** : ${result.message}`;
                 }
