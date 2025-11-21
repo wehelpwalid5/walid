@@ -1,973 +1,605 @@
-+   1 <!DOCTYPE html>
-+   2 <html lang="fr">
-+   3 <head>
-+   4     <meta charset="UTF-8">
-+   5     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-+   6     <title>CCcam Server Checker</title>
-+   7     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-+   8     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
-+   9     <style>
-+  10         :root {
-+  11             --bg-primary: #0a0e27;
-+  12             --bg-secondary: #141936;
-+  13             --bg-card: #1a1f3a;
-+  14             --accent-primary: #00d9ff;
-+  15             --accent-secondary: #7b2cbf;
-+  16             --text-primary: #e0e6ff;
-+  17             --text-secondary: #8b92b8;
-+  18             --success: #00ff88;
-+  19             --error: #ff4757;
-+  20             --warning: #ffa502;
-+  21             --border: rgba(0, 217, 255, 0.2);
-+  22         }
-+  23 
-+  24         .light {
-+  25             --bg-primary: #f4f7fc;
-+  26             --bg-secondary: #ffffff;
-+  27             --bg-card: #ffffff;
-+  28             --accent-primary: #0066cc;
-+  29             --accent-secondary: #6a1b9a;
-+  30             --text-primary: #1a1f3a;
-+  31             --text-secondary: #5f6368;
-+  32             --success: #00a85a;
-+  33             --error: #d93025;
-+  34             --warning: #f57c00;
-+  35             --border: rgba(0, 102, 204, 0.3);
-+  36         }
-+  37 
-+  38         * {
-+  39             margin: 0;
-+  40             padding: 0;
-+  41             box-sizing: border-box;
-+  42         }
-+  43 
-+  44         body {
-+  45             font-family: 'Outfit', sans-serif;
-+  46             background: var(--bg-primary);
-+  47             color: var(--text-primary);
-+  48             min-height: 100vh;
-+  49             transition: background 0.3s ease, color 0.3s ease;
-+  50         }
-+  51 
-+  52         .container {
-+  53             max-width: 1400px;
-+  54             margin: 0 auto;
-+  55             padding: 2rem;
-+  56         }
-+  57 
-+  58         header {
-+  59             text-align: center;
-+  60             margin-bottom: 3rem;
-+  61             animation: slideDown 0.6s ease;
-+  62         }
-+  63 
-+  64         @keyframes slideDown {
-+  65             from {
-+  66                 opacity: 0;
-+  67                 transform: translateY(-30px);
-+  68             }
-+  69             to {
-+  70                 opacity: 1;
-+  71                 transform: translateY(0);
-+  72             }
-+  73         }
-+  74 
-+  75         h1 {
-+  76             font-family: 'JetBrains Mono', monospace;
-+  77             font-size: 2.5rem;
-+  78             font-weight: 700;
-+  79             background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-+  80             -webkit-background-clip: text;
-+  81             -webkit-text-fill-color: transparent;
-+  82             background-clip: text;
-+  83             margin-bottom: 0.5rem;
-+  84         }
-+  85 
-+  86         .subtitle {
-+  87             color: var(--text-secondary);
-+  88             font-size: 1rem;
-+  89             font-weight: 300;
-+  90         }
-+  91 
-+  92         .card {
-+  93             background: var(--bg-card);
-+  94             border: 1px solid var(--border);
-+  95             border-radius: 16px;
-+  96             padding: 2rem;
-+  97             margin-bottom: 2rem;
-+  98             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-+  99             animation: fadeInUp 0.6s ease;
-+ 100             animation-fill-mode: both;
-+ 101         }
-+ 102 
-+ 103         @keyframes fadeInUp {
-+ 104             from {
-+ 105                 opacity: 0;
-+ 106                 transform: translateY(20px);
-+ 107             }
-+ 108             to {
-+ 109                 opacity: 1;
-+ 110                 transform: translateY(0);
-+ 111             }
-+ 112         }
-+ 113 
-+ 114         .card:nth-child(2) { animation-delay: 0.1s; }
-+ 115         .card:nth-child(3) { animation-delay: 0.2s; }
-+ 116         .card:nth-child(4) { animation-delay: 0.3s; }
-+ 117 
-+ 118         .card-title {
-+ 119             font-size: 1.3rem;
-+ 120             font-weight: 600;
-+ 121             margin-bottom: 1.5rem;
-+ 122             color: var(--accent-primary);
-+ 123             font-family: 'JetBrains Mono', monospace;
-+ 124         }
-+ 125 
-+ 126         .upload-zone {
-+ 127             border: 2px dashed var(--border);
-+ 128             border-radius: 12px;
-+ 129             padding: 3rem 2rem;
-+ 130             text-align: center;
-+ 131             cursor: pointer;
-+ 132             transition: all 0.3s ease;
-+ 133             background: linear-gradient(135deg, rgba(0, 217, 255, 0.05), rgba(123, 44, 191, 0.05));
-+ 134         }
-+ 135 
-+ 136         .upload-zone:hover, .upload-zone.dragover {
-+ 137             border-color: var(--accent-primary);
-+ 138             background: linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(123, 44, 191, 0.1));
-+ 139             transform: scale(1.02);
-+ 140         }
-+ 141 
-+ 142         .upload-icon {
-+ 143             font-size: 3rem;
-+ 144             margin-bottom: 1rem;
-+ 145         }
-+ 146 
-+ 147         input[type="file"] {
-+ 148             display: none;
-+ 149         }
-+ 150 
-+ 151         .btn {
-+ 152             background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-+ 153             color: white;
-+ 154             border: none;
-+ 155             padding: 0.8rem 2rem;
-+ 156             border-radius: 8px;
-+ 157             font-size: 1rem;
-+ 158             font-weight: 600;
-+ 159             cursor: pointer;
-+ 160             transition: all 0.3s ease;
-+ 161             font-family: 'JetBrains Mono', monospace;
-+ 162             text-transform: uppercase;
-+ 163             letter-spacing: 1px;
-+ 164         }
-+ 165 
-+ 166         .btn:hover {
-+ 167             transform: translateY(-2px);
-+ 168             box-shadow: 0 8px 24px rgba(0, 217, 255, 0.4);
-+ 169         }
-+ 170 
-+ 171         .btn:disabled {
-+ 172             opacity: 0.5;
-+ 173             cursor: not-allowed;
-+ 174             transform: none;
-+ 175         }
-+ 176 
-+ 177         textarea {
-+ 178             width: 100%;
-+ 179             min-height: 150px;
-+ 180             padding: 1rem;
-+ 181             border: 1px solid var(--border);
-+ 182             border-radius: 8px;
-+ 183             background: var(--bg-secondary);
-+ 184             color: var(--text-primary);
-+ 185             font-family: 'JetBrains Mono', monospace;
-+ 186             font-size: 0.9rem;
-+ 187             resize: vertical;
-+ 188             transition: all 0.3s ease;
-+ 189         }
-+ 190 
-+ 191         textarea:focus {
-+ 192             outline: none;
-+ 193             border-color: var(--accent-primary);
-+ 194             box-shadow: 0 0 0 3px rgba(0, 217, 255, 0.1);
-+ 195         }
-+ 196 
-+ 197         .filters {
-+ 198             display: flex;
-+ 199             gap: 1rem;
-+ 200             flex-wrap: wrap;
-+ 201             margin-bottom: 2rem;
-+ 202         }
-+ 203 
-+ 204         .filter-btn {
-+ 205             padding: 0.6rem 1.5rem;
-+ 206             border: 2px solid var(--border);
-+ 207             background: transparent;
-+ 208             color: var(--text-primary);
-+ 209             border-radius: 8px;
-+ 210             cursor: pointer;
-+ 211             font-weight: 500;
-+ 212             transition: all 0.3s ease;
-+ 213             font-family: 'Outfit', sans-serif;
-+ 214         }
-+ 215 
-+ 216         .filter-btn.active {
-+ 217             background: var(--accent-primary);
-+ 218             border-color: var(--accent-primary);
-+ 219             color: var(--bg-primary);
+4     <meta charset="UTF-8">
+    5     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    6     <title>CCcam Server Checker</title>
+-   7     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+-   8     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+    7     <style>
+    8         :root {
+-  11             --bg-primary: #0a0e27;
+-  12             --bg-secondary: #141936;
+-  13             --bg-card: #1a1f3a;
+-  14             --accent-primary: #00d9ff;
+-  15             --accent-secondary: #7b2cbf;
+-  16             --text-primary: #e0e6ff;
+-  17             --text-secondary: #8b92b8;
+-  18             --success: #00ff88;
+-  19             --error: #ff4757;
+-  20             --warning: #ffa502;
+-  21             --border: rgba(0, 217, 255, 0.2);
+-  22         }
+-  23 
+-  24         .light {
+-  25             --bg-primary: #f4f7fc;
+-  26             --bg-secondary: #ffffff;
+-  27             --bg-card: #ffffff;
+-  28             --accent-primary: #0066cc;
+-  29             --accent-secondary: #6a1b9a;
+-  30             --text-primary: #1a1f3a;
+-  31             --text-secondary: #5f6368;
+-  32             --success: #00a85a;
+-  33             --error: #d93025;
+-  34             --warning: #f57c00;
+-  35             --border: rgba(0, 102, 204, 0.3);
++   9             --bg: #f5f5f5;
++  10             --card-bg: #ffffff;
++  11             --text: #333333;
++  12             --text-light: #666666;
++  13             --border: #dddddd;
++  14             --primary: #007bff;
++  15             --success: #28a745;
++  16             --error: #dc3545;
++  17             --warning: #ffc107;
++  18         }
++  19 
++  20         .dark {
++  21             --bg: #1a1a1a;
++  22             --card-bg: #2d2d2d;
++  23             --text: #ffffff;
++  24             --text-light: #aaaaaa;
++  25             --border: #444444;
++  26             --primary: #0d6efd;
++  27             --success: #28a745;
++  28             --error: #dc3545;
++  29             --warning: #ffc107;
+   30         }
+   31 
+   32         * {
+   36         }
+   37 
+   38         body {
+-  45             font-family: 'Outfit', sans-serif;
+-  46             background: var(--bg-primary);
+-  47             color: var(--text-primary);
+-  48             min-height: 100vh;
+-  49             transition: background 0.3s ease, color 0.3s ease;
++  39             font-family: Arial, sans-serif;
++  40             background: var(--bg);
++  41             color: var(--text);
++  42             padding: 20px;
++  43             line-height: 1.6;
+   44         }
+   45 
+   46         .container {
+-  53             max-width: 1400px;
++  47             max-width: 1200px;
+   48             margin: 0 auto;
+-  55             padding: 2rem;
+-  56         }
+-  57 
+-  58         header {
++  49         }
++  50 
++  51         h1 {
+   52             text-align: center;
+-  60             margin-bottom: 3rem;
+-  61             animation: slideDown 0.6s ease;
+-  62         }
+-  63 
+-  64         @keyframes slideDown {
+-  65             from {
+-  66                 opacity: 0;
+-  67                 transform: translateY(-30px);
+-  68             }
+-  69             to {
+-  70                 opacity: 1;
+-  71                 transform: translateY(0);
+-  72             }
+-  73         }
+-  74 
+-  75         h1 {
+-  76             font-family: 'JetBrains Mono', monospace;
+-  77             font-size: 2.5rem;
+-  78             font-weight: 700;
+-  79             background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+-  80             -webkit-background-clip: text;
+-  81             -webkit-text-fill-color: transparent;
+-  82             background-clip: text;
+-  83             margin-bottom: 0.5rem;
++  53             margin-bottom: 10px;
++  54             color: var(--primary);
+   55         }
+   56 
+   57         .subtitle {
+-  87             color: var(--text-secondary);
+-  88             font-size: 1rem;
+-  89             font-weight: 300;
++  58             text-align: center;
++  59             color: var(--text-light);
++  60             margin-bottom: 30px;
+   61         }
+   62 
+   63         .card {
+-  93             background: var(--bg-card);
++  64             background: var(--card-bg);
+   65             border: 1px solid var(--border);
+-  95             border-radius: 16px;
+-  96             padding: 2rem;
+-  97             margin-bottom: 2rem;
+-  98             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+-  99             animation: fadeInUp 0.6s ease;
+- 100             animation-fill-mode: both;
+- 101         }
+- 102 
+- 103         @keyframes fadeInUp {
+- 104             from {
+- 105                 opacity: 0;
+- 106                 transform: translateY(20px);
+- 107             }
+- 108             to {
+- 109                 opacity: 1;
+- 110                 transform: translateY(0);
+- 111             }
+- 112         }
+- 113 
+- 114         .card:nth-child(2) { animation-delay: 0.1s; }
+- 115         .card:nth-child(3) { animation-delay: 0.2s; }
+- 116         .card:nth-child(4) { animation-delay: 0.3s; }
++  66             border-radius: 8px;
++  67             padding: 20px;
++  68             margin-bottom: 20px;
++  69         }
+   70 
+   71         .card-title {
+- 119             font-size: 1.3rem;
+- 120             font-weight: 600;
+- 121             margin-bottom: 1.5rem;
+- 122             color: var(--accent-primary);
+- 123             font-family: 'JetBrains Mono', monospace;
+- 124         }
+- 125 
+- 126         .upload-zone {
+- 127             border: 2px dashed var(--border);
+- 128             border-radius: 12px;
+- 129             padding: 3rem 2rem;
+- 130             text-align: center;
+- 131             cursor: pointer;
+- 132             transition: all 0.3s ease;
+- 133             background: linear-gradient(135deg, rgba(0, 217, 255, 0.05), rgba(123, 44, 191, 0.05));
+- 134         }
+- 135 
+- 136         .upload-zone:hover, .upload-zone.dragover {
+- 137             border-color: var(--accent-primary);
+- 138             background: linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(123, 44, 191, 0.1));
+- 139             transform: scale(1.02);
+- 140         }
+- 141 
+- 142         .upload-icon {
+- 143             font-size: 3rem;
+- 144             margin-bottom: 1rem;
+- 145         }
+- 146 
+- 147         input[type="file"] {
+- 148             display: none;
++  72             font-size: 1.2rem;
++  73             font-weight: bold;
++  74             margin-bottom: 15px;
++  75             color: var(--primary);
++  76         }
++  77 
++  78         textarea {
++  79             width: 100%;
++  80             min-height: 150px;
++  81             padding: 10px;
++  82             border: 1px solid var(--border);
++  83             border-radius: 4px;
++  84             background: var(--bg);
++  85             color: var(--text);
++  86             font-family: monospace;
++  87             font-size: 14px;
++  88             resize: vertical;
++  89         }
++  90 
++  91         textarea:focus {
++  92             outline: none;
++  93             border-color: var(--primary);
+   94         }
+   95 
+   96         .btn {
+- 152             background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
++  97             background: var(--primary);
+   98             color: white;
+   99             border: none;
+- 155             padding: 0.8rem 2rem;
+- 156             border-radius: 8px;
+- 157             font-size: 1rem;
+- 158             font-weight: 600;
++ 100             padding: 10px 20px;
++ 101             border-radius: 4px;
+  102             cursor: pointer;
+- 160             transition: all 0.3s ease;
+- 161             font-family: 'JetBrains Mono', monospace;
+- 162             text-transform: uppercase;
+- 163             letter-spacing: 1px;
++ 103             font-size: 14px;
++ 104             margin-top: 10px;
+  105         }
+  106 
+  107         .btn:hover {
+- 167             transform: translateY(-2px);
+- 168             box-shadow: 0 8px 24px rgba(0, 217, 255, 0.4);
++ 108             opacity: 0.9;
+  109         }
+  110 
+  111         .btn:disabled {
+  112             opacity: 0.5;
+  113             cursor: not-allowed;
+- 174             transform: none;
+- 175         }
+- 176 
+- 177         textarea {
+- 178             width: 100%;
+- 179             min-height: 150px;
+- 180             padding: 1rem;
+- 181             border: 1px solid var(--border);
+- 182             border-radius: 8px;
+- 183             background: var(--bg-secondary);
+- 184             color: var(--text-primary);
+- 185             font-family: 'JetBrains Mono', monospace;
+- 186             font-size: 0.9rem;
+- 187             resize: vertical;
+- 188             transition: all 0.3s ease;
+- 189         }
+- 190 
+- 191         textarea:focus {
+- 192             outline: none;
+- 193             border-color: var(--accent-primary);
+- 194             box-shadow: 0 0 0 3px rgba(0, 217, 255, 0.1);
+- 195         }
+- 196 
+- 197         .filters {
+- 198             display: flex;
+- 199             gap: 1rem;
+- 200             flex-wrap: wrap;
+- 201             margin-bottom: 2rem;
+- 202         }
+- 203 
+- 204         .filter-btn {
+- 205             padding: 0.6rem 1.5rem;
+- 206             border: 2px solid var(--border);
+- 207             background: transparent;
+- 208             color: var(--text-primary);
+- 209             border-radius: 8px;
+- 210             cursor: pointer;
+- 211             font-weight: 500;
+- 212             transition: all 0.3s ease;
+- 213             font-family: 'Outfit', sans-serif;
+- 214         }
+- 215 
+- 216         .filter-btn.active {
+- 217             background: var(--accent-primary);
+- 218             border-color: var(--accent-primary);
+- 219             color: var(--bg-primary);
+- 220         }
+- 221 
+- 222         .filter-btn:hover {
+- 223             border-color: var(--accent-primary);
+- 224             transform: translateY(-2px);
++ 114         }
++ 115 
++ 116         .btn-secondary {
++ 117             background: #6c757d;
++ 118         }
++ 119 
++ 120         .btn-danger {
++ 121             background: var(--error);
+  122         }
+  123 
+  124         .stats {
+  125             display: grid;
+- 229             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+- 230             gap: 1rem;
+- 231             margin-bottom: 2rem;
++ 126             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
++ 127             gap: 15px;
++ 128             margin-bottom: 20px;
+  129         }
+  130 
+  131         .stat-card {
+- 235             background: var(--bg-secondary);
+- 236             padding: 1.5rem;
+- 237             border-radius: 12px;
+- 238             border-left: 4px solid var(--accent-primary);
+- 239             transition: all 0.3s ease;
+- 240         }
+- 241 
+- 242         .stat-card:hover {
+- 243             transform: translateX(5px);
++ 132             background: var(--bg);
++ 133             padding: 15px;
++ 134             border-radius: 4px;
++ 135             border-left: 4px solid var(--primary);
+  136         }
+  137 
+  138         .stat-card.online { border-left-color: var(--success); }
+  141 
+  142         .stat-value {
+  143             font-size: 2rem;
+- 252             font-weight: 700;
+- 253             font-family: 'JetBrains Mono', monospace;
++ 144             font-weight: bold;
+  145         }
+  146 
+  147         .stat-label {
+- 257             color: var(--text-secondary);
++ 148             color: var(--text-light);
+  149             font-size: 0.9rem;
+- 259             margin-top: 0.5rem;
+- 260         }
+- 261 
+- 262         .servers-table {
++ 150         }
++ 151 
++ 152         .filters {
++ 153             display: flex;
++ 154             gap: 10px;
++ 155             flex-wrap: wrap;
++ 156             margin-bottom: 20px;
++ 157         }
++ 158 
++ 159         .filter-btn {
++ 160             padding: 8px 16px;
++ 161             border: 1px solid var(--border);
++ 162             background: var(--card-bg);
++ 163             color: var(--text);
++ 164             border-radius: 4px;
++ 165             cursor: pointer;
++ 166         }
++ 167 
++ 168         .filter-btn.active {
++ 169             background: var(--primary);
++ 170             border-color: var(--primary);
++ 171             color: white;
++ 172         }
++ 173 
++ 174         table {
+  175             width: 100%;
+- 264             border-collapse: separate;
+- 265             border-spacing: 0;
+- 266         }
+- 267 
+- 268         .servers-table th {
+- 269             background: var(--bg-secondary);
+- 270             padding: 1rem;
++ 176             border-collapse: collapse;
++ 177         }
++ 178 
++ 179         th, td {
++ 180             padding: 12px;
+  181             text-align: left;
+- 272             font-weight: 600;
+- 273             font-family: 'JetBrains Mono', monospace;
+- 274             border-bottom: 2px solid var(--border);
+- 275             position: sticky;
+- 276             top: 0;
+- 277             z-index: 10;
+- 278         }
+- 279 
+- 280         .servers-table td {
+- 281             padding: 1rem;
+  182             border-bottom: 1px solid var(--border);
+- 283             font-family: 'JetBrains Mono', monospace;
+- 284             font-size: 0.85rem;
+- 285         }
+- 286 
+- 287         .servers-table tr {
+- 288             transition: all 0.3s ease;
+- 289         }
+- 290 
+- 291         .servers-table tbody tr:hover {
+- 292             background: var(--bg-secondary);
+- 293             transform: scale(1.01);
++ 183         }
++ 184 
++ 185         th {
++ 186             background: var(--bg);
++ 187             font-weight: bold;
++ 188         }
++ 189 
++ 190         tr:hover {
++ 191             background: var(--bg);
+  192         }
+  193 
+  194         .status-badge {
+  195             display: inline-block;
+- 298             padding: 0.4rem 1rem;
+- 299             border-radius: 20px;
+- 300             font-size: 0.8rem;
+- 301             font-weight: 600;
+- 302             text-transform: uppercase;
++ 196             padding: 4px 12px;
++ 197             border-radius: 12px;
++ 198             font-size: 0.85rem;
++ 199             font-weight: bold;
+  200         }
+  201 
+  202         .status-online {
+- 306             background: rgba(0, 255, 136, 0.2);
+- 307             color: var(--success);
+- 308             border: 1px solid var(--success);
++ 203             background: #d4edda;
++ 204             color: #155724;
+  205         }
+  206 
+  207         .status-offline {
+- 312             background: rgba(255, 71, 87, 0.2);
+- 313             color: var(--error);
+- 314             border: 1px solid var(--error);
++ 208             background: #f8d7da;
++ 209             color: #721c24;
+  210         }
+  211 
+  212         .status-testing {
+- 318             background: rgba(255, 165, 2, 0.2);
+- 319             color: var(--warning);
+- 320             border: 1px solid var(--warning);
+- 321         }
+- 322 
+- 323         .loading {
+- 324             text-align: center;
+- 325             padding: 3rem;
+- 326         }
+- 327 
+- 328         .spinner {
+- 329             border: 4px solid var(--border);
+- 330             border-top: 4px solid var(--accent-primary);
+- 331             border-radius: 50%;
+- 332             width: 50px;
+- 333             height: 50px;
+- 334             animation: spin 1s linear infinite;
+- 335             margin: 0 auto;
+- 336         }
+- 337 
+- 338         @keyframes spin {
+- 339             0% { transform: rotate(0deg); }
+- 340             100% { transform: rotate(360deg); }
++ 213             background: #fff3cd;
++ 214             color: #856404;
++ 215         }
++ 216 
++ 217         .dark .status-online {
++ 218             background: #1e4620;
++ 219             color: #75ff75;
 + 220         }
 + 221 
-+ 222         .filter-btn:hover {
-+ 223             border-color: var(--accent-primary);
-+ 224             transform: translateY(-2px);
++ 222         .dark .status-offline {
++ 223             background: #5a1a1a;
++ 224             color: #ff7575;
 + 225         }
 + 226 
-+ 227         .stats {
-+ 228             display: grid;
-+ 229             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-+ 230             gap: 1rem;
-+ 231             margin-bottom: 2rem;
-+ 232         }
-+ 233 
-+ 234         .stat-card {
-+ 235             background: var(--bg-secondary);
-+ 236             padding: 1.5rem;
-+ 237             border-radius: 12px;
-+ 238             border-left: 4px solid var(--accent-primary);
-+ 239             transition: all 0.3s ease;
-+ 240         }
-+ 241 
-+ 242         .stat-card:hover {
-+ 243             transform: translateX(5px);
-+ 244         }
-+ 245 
-+ 246         .stat-card.online { border-left-color: var(--success); }
-+ 247         .stat-card.offline { border-left-color: var(--error); }
-+ 248         .stat-card.testing { border-left-color: var(--warning); }
-+ 249 
-+ 250         .stat-value {
-+ 251             font-size: 2rem;
-+ 252             font-weight: 700;
-+ 253             font-family: 'JetBrains Mono', monospace;
-+ 254         }
-+ 255 
-+ 256         .stat-label {
-+ 257             color: var(--text-secondary);
-+ 258             font-size: 0.9rem;
-+ 259             margin-top: 0.5rem;
-+ 260         }
-+ 261 
-+ 262         .servers-table {
-+ 263             width: 100%;
-+ 264             border-collapse: separate;
-+ 265             border-spacing: 0;
-+ 266         }
-+ 267 
-+ 268         .servers-table th {
-+ 269             background: var(--bg-secondary);
-+ 270             padding: 1rem;
-+ 271             text-align: left;
-+ 272             font-weight: 600;
-+ 273             font-family: 'JetBrains Mono', monospace;
-+ 274             border-bottom: 2px solid var(--border);
-+ 275             position: sticky;
-+ 276             top: 0;
-+ 277             z-index: 10;
-+ 278         }
-+ 279 
-+ 280         .servers-table td {
-+ 281             padding: 1rem;
-+ 282             border-bottom: 1px solid var(--border);
-+ 283             font-family: 'JetBrains Mono', monospace;
-+ 284             font-size: 0.85rem;
-+ 285         }
-+ 286 
-+ 287         .servers-table tr {
-+ 288             transition: all 0.3s ease;
-+ 289         }
-+ 290 
-+ 291         .servers-table tbody tr:hover {
-+ 292             background: var(--bg-secondary);
-+ 293             transform: scale(1.01);
-+ 294         }
-+ 295 
-+ 296         .status-badge {
-+ 297             display: inline-block;
-+ 298             padding: 0.4rem 1rem;
-+ 299             border-radius: 20px;
-+ 300             font-size: 0.8rem;
-+ 301             font-weight: 600;
-+ 302             text-transform: uppercase;
-+ 303         }
-+ 304 
-+ 305         .status-online {
-+ 306             background: rgba(0, 255, 136, 0.2);
-+ 307             color: var(--success);
-+ 308             border: 1px solid var(--success);
-+ 309         }
-+ 310 
-+ 311         .status-offline {
-+ 312             background: rgba(255, 71, 87, 0.2);
-+ 313             color: var(--error);
-+ 314             border: 1px solid var(--error);
-+ 315         }
-+ 316 
-+ 317         .status-testing {
-+ 318             background: rgba(255, 165, 2, 0.2);
-+ 319             color: var(--warning);
-+ 320             border: 1px solid var(--warning);
-+ 321         }
-+ 322 
-+ 323         .loading {
-+ 324             text-align: center;
-+ 325             padding: 3rem;
-+ 326         }
-+ 327 
-+ 328         .spinner {
-+ 329             border: 4px solid var(--border);
-+ 330             border-top: 4px solid var(--accent-primary);
-+ 331             border-radius: 50%;
-+ 332             width: 50px;
-+ 333             height: 50px;
-+ 334             animation: spin 1s linear infinite;
-+ 335             margin: 0 auto;
-+ 336         }
-+ 337 
-+ 338         @keyframes spin {
-+ 339             0% { transform: rotate(0deg); }
-+ 340             100% { transform: rotate(360deg); }
-+ 341         }
-+ 342 
-+ 343         .action-btns {
-+ 344             display: flex;
-+ 345             gap: 1rem;
-+ 346             margin-top: 1rem;
-+ 347             flex-wrap: wrap;
-+ 348         }
-+ 349 
-+ 350         .btn-secondary {
-+ 351             background: var(--bg-secondary);
-+ 352             color: var(--text-primary);
-+ 353             border: 2px solid var(--border);
-+ 354         }
-+ 355 
-+ 356         .btn-secondary:hover {
-+ 357             border-color: var(--accent-primary);
-+ 358             box-shadow: 0 4px 16px rgba(0, 217, 255, 0.2);
-+ 359         }
-+ 360 
-+ 361         .server-input-group {
-+ 362             display: grid;
-+ 363             grid-template-columns: 1fr auto;
-+ 364             gap: 1rem;
-+ 365             align-items: end;
-+ 366         }
-+ 367 
-+ 368         @media (max-width: 768px) {
-+ 369             h1 {
-+ 370                 font-size: 1.8rem;
-+ 371             }
-+ 372 
-+ 373             .container {
-+ 374                 padding: 1rem;
-+ 375             }
-+ 376 
-+ 377             .card {
-+ 378                 padding: 1.5rem;
-+ 379             }
-+ 380 
-+ 381             .filters {
-+ 382                 justify-content: center;
-+ 383             }
-+ 384 
-+ 385             .servers-table {
-+ 386                 font-size: 0.75rem;
-+ 387             }
-+ 388 
-+ 389             .servers-table th,
-+ 390             .servers-table td {
-+ 391                 padding: 0.5rem;
-+ 392             }
-+ 393 
-+ 394             .server-input-group {
-+ 395                 grid-template-columns: 1fr;
-+ 396             }
-+ 397         }
-+ 398 
-+ 399         .empty-state {
-+ 400             text-align: center;
-+ 401             padding: 4rem 2rem;
-+ 402             color: var(--text-secondary);
-+ 403         }
-+ 404 
-+ 405         .empty-state-icon {
-+ 406             font-size: 4rem;
-+ 407             margin-bottom: 1rem;
-+ 408             opacity: 0.5;
-+ 409         }
-+ 410 
-+ 411         .table-container {
-+ 412             overflow-x: auto;
-+ 413             max-height: 600px;
-+ 414             overflow-y: auto;
-+ 415         }
-+ 416 
-+ 417         .progress-bar {
-+ 418             width: 100%;
-+ 419             height: 4px;
-+ 420             background: var(--bg-secondary);
-+ 421             border-radius: 2px;
-+ 422             overflow: hidden;
-+ 423             margin-top: 1rem;
-+ 424         }
-+ 425 
-+ 426         .progress-fill {
-+ 427             height: 100%;
-+ 428             background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
-+ 429             transition: width 0.3s ease;
-+ 430             animation: shimmer 2s infinite;
-+ 431         }
-+ 432 
-+ 433         @keyframes shimmer {
-+ 434             0% { opacity: 0.6; }
-+ 435             50% { opacity: 1; }
-+ 436             100% { opacity: 0.6; }
-+ 437         }
-+ 438     </style>
-+ 439 </head>
-+ 440 <body>
-+ 441     <div class="container">
-+ 442         <header>
-+ 443             <h1>⚡ CCcam Server Checker</h1>
-+ 444             <p class="subtitle">Vérifiez et gérez vos serveurs CCcam en temps réel</p>
-+ 445         </header>
-+ 446 
-+ 447         <!-- Upload Section -->
-+ 448         <div class="card">
-+ 449             <h2 class="card-title">📁 Importer des Serveurs</h2>
-+ 450             
-+ 451             <div class="upload-zone" id="uploadZone">
-+ 452                 <div class="upload-icon">📤</div>
-+ 453                 <p><strong>Glissez-déposez vos fichiers ici</strong></p>
-+ 454                 <p style="color: var(--text-secondary); margin-top: 0.5rem;">ou cliquez pour sélectionner</p>
-+ 455                 <p style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.85rem;">Formats acceptés: Excel (.xlsx, .xls), Text (.txt)</p>
-+ 456             </div>
-+ 457             <input type="file" id="fileInput" accept=".xlsx,.xls,.txt" multiple>
-+ 458 
-+ 459             <div class="action-btns">
-+ 460                 <button class="btn" onclick="document.getElementById('fileInput').click()">
-+ 461                     📂 Sélectionner des fichiers
-+ 462                 </button>
-+ 463                 <button class="btn btn-secondary" onclick="showManualInput()">
-+ 464                     ✏️ Saisie manuelle
-+ 465                 </button>
-+ 466             </div>
-+ 467         </div>
-+ 468 
-+ 469         <!-- Manual Input Section -->
-+ 470         <div class="card" id="manualInputCard" style="display: none;">
-+ 471             <h2 class="card-title">✏️ Saisie Manuelle de Serveurs</h2>
-+ 472             
-+ 473             <div class="server-input-group">
-+ 474                 <textarea id="serverInput" placeholder="Collez vos clines ici (une par ligne)&#10;Format: C: host port username password&#10;&#10;Exemple:&#10;C: cccam.ugeen.live 28000 95146 ugeen&#10;C: server.example.com 12000 user1 pass1"></textarea>
-+ 475                 <button class="btn" onclick="parseManualInput()">
-+ 476                     ✅ Analyser
-+ 477                 </button>
-+ 478             </div>
-+ 479         </div>
-+ 480 
-+ 481         <!-- Stats Section -->
-+ 482         <div class="card" id="statsCard" style="display: none;">
-+ 483             <h2 class="card-title">📊 Statistiques</h2>
-+ 484             <div class="stats">
-+ 485                 <div class="stat-card">
-+ 486                     <div class="stat-value" id="totalCount">0</div>
-+ 487                     <div class="stat-label">Total Serveurs</div>
-+ 488                 </div>
-+ 489                 <div class="stat-card online">
-+ 490                     <div class="stat-value" id="onlineCount" style="color: var(--success);">0</div>
-+ 491                     <div class="stat-label">En Ligne</div>
-+ 492                 </div>
-+ 493                 <div class="stat-card offline">
-+ 494                     <div class="stat-value" id="offlineCount" style="color: var(--error);">0</div>
-+ 495                     <div class="stat-label">Hors Ligne</div>
-+ 496                 </div>
-+ 497                 <div class="stat-card testing">
-+ 498                     <div class="stat-value" id="testingCount" style="color: var(--warning);">0</div>
-+ 499                     <div class="stat-label">En Test</div>
-+ 500                 </div>
-+ 501             </div>
-+ 502         </div>
-+ 503 
-+ 504         <!-- Filters Section -->
-+ 505         <div class="card" id="filtersCard" style="display: none;">
-+ 506             <h2 class="card-title">🔍 Filtres</h2>
-+ 507             <div class="filters">
-+ 508                 <button class="filter-btn active" onclick="filterServers('all')">
-+ 509                     Tous
-+ 510                 </button>
-+ 511                 <button class="filter-btn" onclick="filterServers('online')">
-+ 512                     ✅ En Ligne
-+ 513                 </button>
-+ 514                 <button class="filter-btn" onclick="filterServers('offline')">
-+ 515                     ❌ Hors Ligne
-+ 516                 </button>
-+ 517                 <button class="filter-btn" onclick="filterServers('testing')">
-+ 518                     🔄 En Test
-+ 519                 </button>
-+ 520             </div>
-+ 521         </div>
-+ 522 
-+ 523         <!-- Servers Table -->
-+ 524         <div class="card" id="serversCard" style="display: none;">
-+ 525             <h2 class="card-title">🖥️ Liste des Serveurs</h2>
-+ 526             
-+ 527             <div class="action-btns" style="margin-bottom: 1rem;">
-+ 528                 <button class="btn" onclick="testAllServers()">
-+ 529                     🔄 Tester Tous
-+ 530                 </button>
-+ 531                 <button class="btn btn-secondary" onclick="exportResults()">
-+ 532                     💾 Exporter Résultats
-+ 533                 </button>
-+ 534                 <button class="btn btn-secondary" onclick="clearServers()">
-+ 535                     🗑️ Effacer Tout
-+ 536                 </button>
-+ 537             </div>
-+ 538 
-+ 539             <div id="testProgress" style="display: none;">
-+ 540                 <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">Test en cours...</p>
-+ 541                 <div class="progress-bar">
-+ 542                     <div class="progress-fill" id="progressFill" style="width: 0%"></div>
-+ 543                 </div>
-+ 544             </div>
-+ 545 
-+ 546             <div class="table-container">
-+ 547                 <table class="servers-table">
-+ 548                     <thead>
-+ 549                         <tr>
-+ 550                             <th>#</th>
-+ 551                             <th>Hôte</th>
-+ 552                             <th>Port</th>
-+ 553                             <th>Utilisateur</th>
-+ 554                             <th>Mot de passe</th>
-+ 555                             <th>Statut</th>
-+ 556                             <th>Temps</th>
-+ 557                         </tr>
-+ 558                     </thead>
-+ 559                     <tbody id="serversTableBody">
-+ 560                     </tbody>
-+ 561                 </table>
-+ 562             </div>
-+ 563 
-+ 564             <div id="emptyState" class="empty-state">
-+ 565                 <div class="empty-state-icon">📭</div>
-+ 566                 <p>Aucun serveur à afficher</p>
-+ 567             </div>
-+ 568         </div>
-+ 569     </div>
-+ 570 
-+ 571     <script>
-+ 572         // Dark/Light mode detection
-+ 573         if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-+ 574             document.documentElement.classList.add('dark');
-+ 575         }
-+ 576         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-+ 577             if (event.matches) {
-+ 578                 document.documentElement.classList.add('dark');
-+ 579             } else {
-+ 580                 document.documentElement.classList.remove('dark');
-+ 581             }
-+ 582         });
-+ 583 
-+ 584         let servers = [];
-+ 585         let currentFilter = 'all';
-+ 586 
-+ 587         // Drag and drop handlers
-+ 588         const uploadZone = document.getElementById('uploadZone');
-+ 589         
-+ 590         uploadZone.addEventListener('click', () => {
-+ 591             document.getElementById('fileInput').click();
-+ 592         });
-+ 593 
-+ 594         uploadZone.addEventListener('dragover', (e) => {
-+ 595             e.preventDefault();
-+ 596             uploadZone.classList.add('dragover');
-+ 597         });
-+ 598 
-+ 599         uploadZone.addEventListener('dragleave', () => {
-+ 600             uploadZone.classList.remove('dragover');
-+ 601         });
-+ 602 
-+ 603         uploadZone.addEventListener('drop', (e) => {
-+ 604             e.preventDefault();
-+ 605             uploadZone.classList.remove('dragover');
-+ 606             const files = e.dataTransfer.files;
-+ 607             handleFiles(files);
-+ 608         });
-+ 609 
-+ 610         document.getElementById('fileInput').addEventListener('change', (e) => {
-+ 611             handleFiles(e.target.files);
-+ 612         });
-+ 613 
-+ 614         function handleFiles(files) {
-+ 615             Array.from(files).forEach(file => {
-+ 616                 const extension = file.name.split('.').pop().toLowerCase();
-+ 617                 
-+ 618                 if (extension === 'txt') {
-+ 619                     readTextFile(file);
-+ 620                 } else if (extension === 'xlsx' || extension === 'xls') {
-+ 621                     readExcelFile(file);
-+ 622                 } else {
-+ 623                     showNotification('Format de fichier non supporté: ' + file.name, 'error');
-+ 624                 }
-+ 625             });
-+ 626         }
-+ 627 
-+ 628         function readTextFile(file) {
-+ 629             const reader = new FileReader();
-+ 630             reader.onload = (e) => {
-+ 631                 const content = e.target.result;
-+ 632                 parseClines(content);
-+ 633             };
-+ 634             reader.readAsText(file);
-+ 635         }
-+ 636 
-+ 637         function readExcelFile(file) {
-+ 638             const reader = new FileReader();
-+ 639             reader.onload = (e) => {
-+ 640                 const data = new Uint8Array(e.target.result);
-+ 641                 const workbook = XLSX.read(data, { type: 'array' });
-+ 642                 
-+ 643                 let allText = '';
-+ 644                 workbook.SheetNames.forEach(sheetName => {
-+ 645                     const worksheet = workbook.Sheets[sheetName];
-+ 646                     const text = XLSX.utils.sheet_to_csv(worksheet);
-+ 647                     allText += text + '\n';
-+ 648                 });
-+ 649                 
-+ 650                 parseClines(allText);
-+ 651             };
-+ 652             reader.readAsArrayBuffer(file);
-+ 653         }
-+ 654 
-+ 655         function parseClines(text) {
-+ 656             const lines = text.split('\n');
-+ 657             let parsed = 0;
-+ 658             
-+ 659             lines.forEach(line => {
-+ 660                 // Flexible regex to parse clines with various formats
-+ 661                 // Matches: C: host port username password
-+ 662                 // Also handles extra spaces, tabs, dashes, etc.
-+ 663                 const clineRegex = /C\s*:\s*([a-zA-Z0-9\.\-_]+)\s+(\d+)\s+([a-zA-Z0-9\.\-_]+)\s+([a-zA-Z0-9\.\-_]+)/i;
-+ 664                 const match = line.match(clineRegex);
-+ 665                 
-+ 666                 if (match) {
-+ 667                     const server = {
-+ 668                         id: servers.length + 1,
-+ 669                         host: match[1].trim(),
-+ 670                         port: match[2].trim(),
-+ 671                         username: match[3].trim(),
-+ 672                         password: match[4].trim(),
-+ 673                         status: 'testing',
-+ 674                         responseTime: '-'
-+ 675                     };
-+ 676                     servers.push(server);
-+ 677                     parsed++;
-+ 678                 }
-+ 679             });
-+ 680             
-+ 681             if (parsed > 0) {
-+ 682                 showNotification(`${parsed} serveur(s) ajouté(s) avec succès`, 'success');
-+ 683                 updateDisplay();
-+ 684                 testAllServers();
-+ 685             } else {
-+ 686                 showNotification('Aucun serveur valide trouvé dans le fichier', 'error');
-+ 687             }
-+ 688         }
-+ 689 
-+ 690         function showManualInput() {
-+ 691             const card = document.getElementById('manualInputCard');
-+ 692             card.style.display = card.style.display === 'none' ? 'block' : 'none';
-+ 693         }
-+ 694 
-+ 695         function parseManualInput() {
-+ 696             const input = document.getElementById('serverInput').value;
-+ 697             if (!input.trim()) {
-+ 698                 showNotification('Veuillez entrer au moins une cline', 'error');
-+ 699                 return;
-+ 700             }
-+ 701             
-+ 702             parseClines(input);
-+ 703             document.getElementById('serverInput').value = '';
-+ 704         }
-+ 705 
-+ 706         function updateDisplay() {
-+ 707             if (servers.length === 0) {
-+ 708                 document.getElementById('statsCard').style.display = 'none';
-+ 709                 document.getElementById('filtersCard').style.display = 'none';
-+ 710                 document.getElementById('serversCard').style.display = 'none';
-+ 711                 return;
-+ 712             }
-+ 713 
-+ 714             document.getElementById('statsCard').style.display = 'block';
-+ 715             document.getElementById('filtersCard').style.display = 'block';
-+ 716             document.getElementById('serversCard').style.display = 'block';
-+ 717 
-+ 718             updateStats();
-+ 719             renderServers();
-+ 720         }
-+ 721 
-+ 722         function updateStats() {
-+ 723             const total = servers.length;
-+ 724             const online = servers.filter(s => s.status === 'online').length;
-+ 725             const offline = servers.filter(s => s.status === 'offline').length;
-+ 726             const testing = servers.filter(s => s.status === 'testing').length;
-+ 727 
-+ 728             document.getElementById('totalCount').textContent = total;
-+ 729             document.getElementById('onlineCount').textContent = online;
-+ 730             document.getElementById('offlineCount').textContent = offline;
-+ 731             document.getElementById('testingCount').textContent = testing;
-+ 732         }
-+ 733 
-+ 734         function renderServers() {
-+ 735             const tbody = document.getElementById('serversTableBody');
-+ 736             const emptyState = document.getElementById('emptyState');
-+ 737             
-+ 738             let filteredServers = servers;
-+ 739             if (currentFilter !== 'all') {
-+ 740                 filteredServers = servers.filter(s => s.status === currentFilter);
-+ 741             }
-+ 742 
-+ 743             if (filteredServers.length === 0) {
-+ 744                 tbody.innerHTML = '';
-+ 745                 emptyState.style.display = 'block';
-+ 746                 return;
-+ 747             }
-+ 748 
-+ 749             emptyState.style.display = 'none';
-+ 750 
-+ 751             tbody.innerHTML = filteredServers.map(server => `
-+ 752                 <tr>
-+ 753                     <td>${server.id}</td>
-+ 754                     <td>${server.host}</td>
-+ 755                     <td>${server.port}</td>
-+ 756                     <td>${server.username}</td>
-+ 757                     <td>${server.password}</td>
-+ 758                     <td>
-+ 759                         <span class="status-badge status-${server.status}">
-+ 760                             ${server.status === 'online' ? '✅ En ligne' : 
-+ 761                               server.status === 'offline' ? '❌ Hors ligne' : 
-+ 762                               '🔄 Test en cours'}
-+ 763                         </span>
-+ 764                     </td>
-+ 765                     <td>${server.responseTime}</td>
-+ 766                 </tr>
-+ 767             `).join('');
-+ 768         }
-+ 769 
-+ 770         function filterServers(filter) {
-+ 771             currentFilter = filter;
-+ 772             
-+ 773             // Update filter buttons
-+ 774             document.querySelectorAll('.filter-btn').forEach(btn => {
-+ 775                 btn.classList.remove('active');
-+ 776             });
-+ 777             event.target.classList.add('active');
-+ 778             
-+ 779             renderServers();
-+ 780         }
-+ 781 
-+ 782         async function testAllServers() {
-+ 783             if (servers.length === 0) return;
-+ 784 
-+ 785             document.getElementById('testProgress').style.display = 'block';
-+ 786             
-+ 787             for (let i = 0; i < servers.length; i++) {
-+ 788                 await testServer(i);
-+ 789                 
-+ 790                 // Update progress
-+ 791                 const progress = ((i + 1) / servers.length) * 100;
-+ 792                 document.getElementById('progressFill').style.width = progress + '%';
-+ 793                 
-+ 794                 updateStats();
-+ 795                 renderServers();
-+ 796             }
-+ 797 
-+ 798             document.getElementById('testProgress').style.display = 'none';
-+ 799             showNotification('Test de tous les serveurs terminé', 'success');
-+ 800         }
-+ 801 
-+ 802         async function testServer(index) {
-+ 803             // Simulation of server testing
-+ 804             // In a real scenario, you'd need a backend service to test CCcam servers
-+ 805             // as browsers can't make direct TCP connections
-+ 806             
-+ 807             servers[index].status = 'testing';
-+ 808             renderServers();
-+ 809 
-+ 810             return new Promise(resolve => {
-+ 811                 setTimeout(() => {
-+ 812                     // Simulate random results for demonstration
-+ 813                     // In production, replace with actual server testing logic
-+ 814                     const isOnline = Math.random() > 0.3; // 70% chance online
-+ 815                     
-+ 816                     servers[index].status = isOnline ? 'online' : 'offline';
-+ 817                     servers[index].responseTime = isOnline ? 
-+ 818                         `${Math.floor(Math.random() * 500) + 50}ms` : 
-+ 819                         'Timeout';
-+ 820                     
-+ 821                     resolve();
-+ 822                 }, Math.random() * 1000 + 500); // Random delay between 500-1500ms
-+ 823             });
-+ 824         }
-+ 825 
-+ 826         function clearServers() {
-+ 827             showConfirmDialog('Êtes-vous sûr de vouloir effacer tous les serveurs ?', () => {
-+ 828                 servers = [];
-+ 829                 updateDisplay();
-+ 830                 showNotification('Tous les serveurs ont été effacés', 'success');
-+ 831             });
-+ 832         }
-+ 833 
-+ 834         function exportResults() {
-+ 835             if (servers.length === 0) {
-+ 836                 showNotification('Aucun serveur à exporter', 'error');
-+ 837                 return;
-+ 838             }
-+ 839 
-+ 840             // Create CSV content
-+ 841             let csv = 'Hôte,Port,Utilisateur,Mot de passe,Statut,Temps de réponse\n';
-+ 842             servers.forEach(server => {
-+ 843                 csv += `${server.host},${server.port},${server.username},${server.password},${server.status},${server.responseTime}\n`;
-+ 844             });
-+ 845 
-+ 846             // Download CSV
-+ 847             const blob = new Blob([csv], { type: 'text/csv' });
-+ 848             const url = window.URL.createObjectURL(blob);
-+ 849             const a = document.createElement('a');
-+ 850             a.href = url;
-+ 851             a.download = `cccam_servers_${new Date().toISOString().slice(0,10)}.csv`;
-+ 852             a.click();
-+ 853             window.URL.revokeObjectURL(url);
-+ 854 
-+ 855             showNotification('Résultats exportés avec succès', 'success');
-+ 856         }
-+ 857 
-+ 858         function showNotification(message, type) {
-+ 859             const notification = document.createElement('div');
-+ 860             notification.style.cssText = `
-+ 861                 position: fixed;
-+ 862                 top: 20px;
-+ 863                 right: 20px;
-+ 864                 background: ${type === 'success' ? 'var(--success)' : 'var(--error)'};
-+ 865                 color: white;
-+ 866                 padding: 1rem 2rem;
-+ 867                 border-radius: 8px;
-+ 868                 box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-+ 869                 z-index: 1000;
-+ 870                 animation: slideIn 0.3s ease;
-+ 871                 font-family: 'Outfit', sans-serif;
-+ 872                 font-weight: 600;
-+ 873             `;
-+ 874             notification.textContent = message;
-+ 875             document.body.appendChild(notification);
-+ 876 
-+ 877             setTimeout(() => {
-+ 878                 notification.style.animation = 'slideOut 0.3s ease';
-+ 879                 setTimeout(() => notification.remove(), 300);
-+ 880             }, 3000);
-+ 881         }
-+ 882 
-+ 883         function showConfirmDialog(message, onConfirm) {
-+ 884             const modal = document.createElement('div');
-+ 885             modal.style.cssText = `
-+ 886                 position: fixed;
-+ 887                 inset: 0;
-+ 888                 background: rgba(0, 0, 0, 0.7);
-+ 889                 display: flex;
-+ 890                 align-items: center;
-+ 891                 justify-content: center;
-+ 892                 z-index: 2000;
-+ 893                 animation: fadeIn 0.3s ease;
-+ 894             `;
-+ 895             
-+ 896             modal.innerHTML = `
-+ 897                 <div style="
-+ 898                     background: var(--bg-card);
-+ 899                     padding: 2rem;
-+ 900                     border-radius: 16px;
-+ 901                     max-width: 400px;
-+ 902                     width: 90%;
-+ 903                     box-shadow: 0 16px 64px rgba(0,0,0,0.5);
-+ 904                     border: 1px solid var(--border);
-+ 905                 ">
-+ 906                     <p style="color: var(--text-primary); margin-bottom: 2rem; font-size: 1.1rem;">${message}</p>
-+ 907                     <div style="display: flex; justify-content: flex-end; gap: 1rem;">
-+ 908                         <button id="cancelBtn" style="
-+ 909                             padding: 0.8rem 1.5rem;
-+ 910                             background: var(--bg-secondary);
-+ 911                             color: var(--text-primary);
-+ 912                             border: 2px solid var(--border);
-+ 913                             border-radius: 8px;
-+ 914                             cursor: pointer;
-+ 915                             font-weight: 600;
-+ 916                         ">Annuler</button>
-+ 917                         <button id="confirmBtn" style="
-+ 918                             padding: 0.8rem 1.5rem;
-+ 919                             background: var(--error);
-+ 920                             color: white;
-+ 921                             border: none;
-+ 922                             border-radius: 8px;
-+ 923                             cursor: pointer;
-+ 924                             font-weight: 600;
-+ 925                         ">Confirmer</button>
-+ 926                     </div>
-+ 927                 </div>
-+ 928             `;
-+ 929             
-+ 930             document.body.appendChild(modal);
-+ 931             
-+ 932             modal.querySelector('#cancelBtn').addEventListener('click', () => {
-+ 933                 modal.remove();
-+ 934             });
-+ 935             
-+ 936             modal.querySelector('#confirmBtn').addEventListener('click', () => {
-+ 937                 modal.remove();
-+ 938                 onConfirm();
-+ 939             });
-+ 940         }
-+ 941 
-+ 942         // Add CSS animations
-+ 943         const style = document.createElement('style');
-+ 944         style.textContent = `
-+ 945             @keyframes slideIn {
-+ 946                 from {
-+ 947                     transform: translateX(400px);
-+ 948                     opacity: 0;
-+ 949                 }
-+ 950                 to {
-+ 951                     transform: translateX(0);
-+ 952                     opacity: 1;
-+ 953                 }
-+ 954             }
-+ 955             @keyframes slideOut {
-+ 956                 from {
-+ 957                     transform: translateX(0);
-+ 958                     opacity: 1;
-+ 959                 }
-+ 960                 to {
-+ 961                     transform: translateX(400px);
-+ 962                     opacity: 0;
-+ 963                 }
-+ 964             }
-+ 965             @keyframes fadeIn {
-+ 966                 from { opacity: 0; }
-+ 967                 to { opacity: 1; }
-+ 968             }
-+ 969         `;
-+ 970         document.head.appendChild(style);
-+ 971     </script>
-+ 972 </body>
-+ 973 </html>
++ 227         .dark .status-testing {
++ 228             background: #5a4e1a;
++ 229             color: #ffd975;
+  230         }
+  231 
+  232         .action-btns {
+  233             display: flex;
+- 345             gap: 1rem;
+- 346             margin-top: 1rem;
++ 234             gap: 10px;
++ 235             margin-bottom: 15px;
+  236             flex-wrap: wrap;
+- 348         }
+- 349 
+- 350         .btn-secondary {
+- 351             background: var(--bg-secondary);
+- 352             color: var(--text-primary);
+- 353             border: 2px solid var(--border);
+- 354         }
+- 355 
+- 356         .btn-secondary:hover {
+- 357             border-color: var(--accent-primary);
+- 358             box-shadow: 0 4px 16px rgba(0, 217, 255, 0.2);
+- 359         }
+- 360 
+- 361         .server-input-group {
+- 362             display: grid;
+- 363             grid-template-columns: 1fr auto;
+- 364             gap: 1rem;
+- 365             align-items: end;
+- 366         }
+- 367 
+- 368         @media (max-width: 768px) {
+- 369             h1 {
+- 370                 font-size: 1.8rem;
+- 371             }
+- 372 
+- 373             .container {
+- 374                 padding: 1rem;
+- 375             }
+- 376 
+- 377             .card {
+- 378                 padding: 1.5rem;
+- 379             }
+- 380 
+- 381             .filters {
+- 382                 justify-content: center;
+- 383             }
+- 384 
+- 385             .servers-table {
+- 386                 font-size: 0.75rem;
+- 387             }
+- 388 
+- 389             .servers-table th,
+- 390             .servers-table td {
+- 391                 padding: 0.5rem;
+- 392             }
+- 393 
+- 394             .server-input-group {
+- 395                 grid-template-columns: 1fr;
+- 396             }
+- 397         }
+- 398 
+- 399         .empty-state {
+- 400             text-align: center;
+- 401             padding: 4rem 2rem;
+- 402             color: var(--text-secondary);
+- 403         }
+- 404 
+- 405         .empty-state-icon {
+- 406             font-size: 4rem;
+- 407             margin-bottom: 1rem;
+- 408             opacity: 0.5;
+  237         }
+  238 
+  239         .table-container {
+  242             overflow-y: auto;
+  243         }
+  244 
++ 245         .empty-state {
++ 246             text-align: center;
++ 247             padding: 40px;
++ 248             color: var(--text-light);
++ 249         }
++ 250 
+  251         .progress-bar {
+  252             width: 100%;
+  253             height: 4px;
+- 420             background: var(--bg-secondary);
++ 254             background: var(--border);
+  255             border-radius: 2px;
++ 256             margin-top: 10px;
+  257             overflow: hidden;
+- 423             margin-top: 1rem;
+  258         }
+  259 
+  260         .progress-fill {
+  261             height: 100%;
+- 428             background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+- 429             transition: width 0.3s ease;
+- 430             animation: shimmer 2s infinite;
+- 431         }
+- 432 
+- 433         @keyframes shimmer {
+- 434             0% { opacity: 0.6; }
+- 435             50% { opacity: 1; }
+- 436             100% { opacity: 0.6; }
++ 262             background: var(--primary);
++ 263             transition: width 0.3s;
++ 264         }
++ 265 
++ 266         @media (max-width: 768px) {
++ 267             body {
++ 268                 padding: 10px;
++ 269             }
++ 270 
++ 271             .card {
++ 272                 padding: 15px;
++ 273             }
++ 274 
++ 275             th, td {
++ 276                 padding: 8px;
++ 277                 font-size: 0.9rem;
++ 278             }
+  279         }
+  280     </style>
+  281 </head>
